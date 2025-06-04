@@ -1411,8 +1411,6 @@ if (result.choices) {
     }
 }
 
-        
-        const result = await response.json();
         const aiResponse = result.choices[0].message.content;
         
         // Извлекаем процент
