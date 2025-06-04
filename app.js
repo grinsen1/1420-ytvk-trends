@@ -1423,7 +1423,6 @@ if (result.choices) {
         if (aiScoreElement) {
             aiScoreElement.textContent = `${aiScore}%`;
 console.log('✅ Updated AI score to:', aiScore);
-const aiScoreElement = document.querySelector(`.video-card[data-video-id="${videoData.id}"] .ai-score`);
 } else {
     console.log('❌ AI Score Element not found for video:', videoData.id);
 }
