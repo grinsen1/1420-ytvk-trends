@@ -1063,159 +1063,158 @@ const parseVkVideosFromCrawlResults = (crawlResults) => {
     
     if (!crawlResults || crawlResults.length === 0) {
         console.warn('⚠️ Нет данных от Apify Website Content Crawler');
-        console.log('📋 Generating mock data instead...');
         return generateMockVkVideos();
     }
     
     console.log(`📊 Processing ${crawlResults.length} crawl results`);
     
-    crawlResults.forEach((result, resultIndex) => {
-        console.log(`🔄 Processing result ${resultIndex + 1}/${crawlResults.length}`);
-        
-        const htmlContent = result.html || result.text || '';
-        
-        if (!htmlContent) {
-            console.warn(`⚠️ No content in result ${resultIndex + 1}`);
-            return;
-        }
-        
-        console.log(`📄 Content length for result ${resultIndex + 1}: ${htmlContent.length} chars`);
-        
-        try {
-            // Создаем временный DOM
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = htmlContent;
-            
-            // Попробуем разные селекторы для поиска видео
-            const selectors = [
-                'article[data-video-id]',
-                '.video-item',
-                '.VideoItem',
-                '[data-video]',
-                'a[href*="/video"]',
-                '.trending-video',
-                '[class*="video"]',
-                '[class*="Video"]'
-            ];
-            
-            let videoElements = [];
-            
-            for (const selector of selectors) {
-                videoElements = tempDiv.querySelectorAll(selector);
-                console.log(`🔍 Selector "${selector}" found ${videoElements.length} elements`);
-                
-                if (videoElements.length > 0) {
-                    console.log(`✅ Using selector: ${selector}`);
-                    break;
-                }
-            }
-            
-            if (videoElements.length === 0) {
-                console.warn(`⚠️ No video elements found in result ${resultIndex + 1}`);
-                
-                // Ищем любые ссылки как fallback
-                const allLinks = tempDiv.querySelectorAll('a[href]');
-                console.log(`🔗 Found ${allLinks.length} total links`);
-                
-                const videoLinks = Array.from(allLinks).filter(link => 
-                    link.href.includes('video') || 
-                    link.href.includes('watch') ||
-                    link.textContent.toLowerCase().includes('видео')
-                );
-                
-                console.log(`🎥 Found ${videoLinks.length} potential video links`);
-                
-                // Создаем mock видео на основе найденных ссылок
-                videoLinks.slice(0, 5).forEach((link, index) => {
-                    videos.push({
-                        id: `vk-link-${resultIndex}-${index}`,
-                        title: link.textContent.trim() || `VK Video ${videos.length + 1}`,
-                        author: 'VK User',
-                        views: Math.floor(Math.random() * 500000) + 10000,
-                        likes: Math.floor(Math.random() * 25000) + 1000,
-                        comments: Math.floor(Math.random() * 2500) + 100,
-                        date: Math.floor(Date.now() / 1000) - (index * 3600),
-                        image: `https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=VK+${videos.length + 1}`,
-                        url: link.href,
-                        description: 'Извлечено из HTML',
-                        uploadDate: 'Недавно'
-                    });
-                });
-                
-                return;
-            }
-            
-            console.log(`🎬 Processing ${videoElements.length} video elements`);
-            
-            // Обрабатываем найденные элементы видео
-            Array.from(videoElements).slice(0, 10).forEach((element, index) => {
-                try {
-                    console.log(`🔄 Processing video element ${index + 1}`);
-                    
-                    // Извлекаем данные
-                    let title = '';
-                    let url = '';
-                    let thumbnail = '';
-                    
-                    // Заголовок
-                    const titleSelectors = ['h1', 'h2', 'h3', 'h4', '.title', '[class*="title"]'];
-                    for (const selector of titleSelectors) {
-                        const titleEl = element.querySelector(selector);
-                        if (titleEl && titleEl.textContent.trim()) {
-                            title = titleEl.textContent.trim();
-                            break;
-                        }
-                    }
-                    
-                    // URL
-                    const linkEl = element.querySelector('a[href]') || element;
-                    if (linkEl.href) {
-                        url = linkEl.href.startsWith('http') ? linkEl.href : `https://vkvideo.ru${linkEl.href}`;
-                    }
-                    
-                    // Изображение
-                    const imgEl = element.querySelector('img[src]');
-                    if (imgEl && imgEl.src) {
-                        thumbnail = imgEl.src;
-                    }
-                    
-                    const video = {
-                        id: `vk-parsed-${resultIndex}-${index}`,
-                        title: title || `VK Video ${videos.length + 1}`,
-                        author: 'VK Creator',
-                        views: Math.floor(Math.random() * 1000000) + 50000,
-                        likes: Math.floor(Math.random() * 50000) + 2500,
-                        comments: Math.floor(Math.random() * 5000) + 250,
-                        date: Math.floor(Date.now() / 1000) - (index * 3600),
-                        image: thumbnail || `https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=VK+${videos.length + 1}`,
-                        url: url || `https://vkvideo.ru/video${videos.length + 1}`,
-                        description: 'Извлечено из Apify',
-                        uploadDate: 'Недавно'
-                    };
-                    
-                    videos.push(video);
-                    console.log(`✅ Parsed video: ${video.title}`);
-                    
-                } catch (elementError) {
-                    console.error(`❌ Error processing video element ${index + 1}:`, elementError);
-                }
-            });
-            
-        } catch (parseError) {
-            console.error(`❌ Error parsing result ${resultIndex + 1}:`, parseError);
-        }
-    });
+    // Берем первый результат (главная страница трендов)
+    const mainResult = crawlResults[0];
+    const htmlContent = mainResult.html || mainResult.text || '';
     
-    console.log(`📊 Total videos parsed: ${videos.length}`);
-    
-    // Если ничего не найдено, создаем mock данные
-    if (videos.length === 0) {
-        console.log('📋 No videos found, generating mock data...');
+    if (!htmlContent) {
+        console.warn('⚠️ HTML контент отсутствует в результатах Apify');
         return generateMockVkVideos();
     }
     
-    console.log('✅ Parsing completed successfully');
-    return videos.slice(0, 20);
+    console.log(`📄 HTML content length: ${htmlContent.length} chars`);
+    
+    // Создаем временный DOM для парсинга
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    
+    // Ищем видео карточки по правильному селектору
+    const videoElements = tempDiv.querySelectorAll('.VideoCard');
+    console.log(`🎬 Найдено ${videoElements.length} видео карточек`);
+    
+    if (videoElements.length === 0) {
+        console.warn('⚠️ Не найдено видео карточек, создаем mock данные');
+        return generateMockVkVideos();
+    }
+    
+    videoElements.forEach((videoElement, index) => {
+        try {
+            console.log(`🔄 Обрабатываем видео карточку ${index + 1}`);
+            
+            // Извлекаем ID видео из data-id
+            const dataId = videoElement.getAttribute('data-id');
+            console.log(`📝 Data ID: ${dataId}`);
+            
+            // Извлекаем заголовок
+            const titleElement = videoElement.querySelector('.VideoCard__title');
+            const title = titleElement ? titleElement.textContent.trim() : `VK Video ${index + 1}`;
+            console.log(`📝 Title: ${title}`);
+            
+            // Извлекаем автора
+            const authorElement = videoElement.querySelector('.VideoCard__ownerLink');
+            const author = authorElement ? authorElement.textContent.trim() : 'VK User';
+            console.log(`👤 Author: ${author}`);
+            
+            // Извлекаем количество просмотров
+            const viewsElement = videoElement.querySelector('.VideoCard__extendedInfoView');
+let views = 0;
+if (viewsElement) {
+    const viewsText = viewsElement.textContent.trim();
+    views = parseVkViewsCount(viewsText);
+}
+console.log(`👁️ Parsed views: ${views}`);
+            
+            // Извлекаем описание
+            const descElement = videoElement.querySelector('.VideoCard__extendedInfoDescription');
+            const description = descElement ? descElement.textContent.trim().substring(0, 300) + '...' : 'Описание недоступно';
+            console.log(`📄 Description length: ${description.length} chars`);
+            
+            // Извлекаем тамбнейл
+            const imgElement = videoElement.querySelector('.VideoCard__thumbImg');
+            const thumbnail = imgElement ? imgElement.src : `https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=VK+${index + 1}`;
+            console.log(`🖼️ Thumbnail: ${thumbnail ? 'found' : 'placeholder'}`);
+            
+            // Извлекаем URL видео
+            const linkElement = videoElement.querySelector('.VideoCard__title') || videoElement.querySelector('a[href*="/video"]');
+            let videoUrl = '#';
+            if (linkElement && linkElement.href) {
+                videoUrl = linkElement.href.startsWith('http') ? linkElement.href : `https://vkvideo.ru${linkElement.href}`;
+            } else if (dataId) {
+                videoUrl = `https://vkvideo.ru/video${dataId}`;
+            }
+            console.log(`🔗 Video URL: ${videoUrl}`);
+            
+            // Извлекаем дату публикации
+            const dateElement = videoElement.querySelector('.VideoCard__extendedInfoUpdated');
+            const uploadDate = dateElement ? dateElement.textContent.trim() : 'Недавно';
+            console.log(`📅 Upload date: ${uploadDate}`);
+            
+            // Создаем объект видео
+            const videoData = {
+                id: dataId || `vk-parsed-${index + 1}`,
+                title: title,
+                author: author,
+                views: views,
+                likes: Math.floor(views * 0.05), // Примерная оценка лайков (5% от просмотров)
+                comments: Math.floor(views * 0.01), // Примерная оценка комментариев (1% от просмотров)
+                date: Math.floor(Date.now() / 1000) - (index * 3600), // Примерные даты
+                image: thumbnail,
+                url: videoUrl,
+                description: description,
+                uploadDate: uploadDate
+            };
+            
+            videos.push(videoData);
+            console.log(`✅ Parsed video ${index + 1}: "${title}" by ${author} (${views} views)`);
+            
+        } catch (error) {
+            console.error(`❌ Ошибка парсинга видео ${index + 1}:`, error);
+        }
+    });
+    
+    console.log(`📊 Успешно распарсено ${videos.length} видео из ${videoElements.length} карточек`);
+    
+    if (videos.length === 0) {
+        console.warn('⚠️ Не удалось извлечь ни одного видео, создаем mock данные');
+        return generateMockVkVideos();
+    }
+    
+    // Возвращаем максимум 20 видео
+    const result = videos.slice(0, 20);
+    console.log(`🎯 Returning ${result.length} videos`);
+    
+    return result;
+};
+
+const parseVkViewsCount = (viewsText) => {
+    if (!viewsText) return 0;
+    
+    console.log(`Parsing views: "${viewsText}"`);
+    
+    // Убираем лишние пробелы и приводим к нижнему регистру
+    const cleanText = viewsText.toLowerCase().replace(/\s+/g, ' ').trim();
+    
+    // Ищем паттерны типа "2,2 млн", "976 тыс", "1 млн", "500 тыс"
+    const patterns = [
+        /([\d,]+(?:\.\d+)?)\s*млн/,  // миллионы
+        /([\d,]+(?:\.\d+)?)\s*тыс/,  // тысячи
+        /([\d\s,]+)/                 // простые числа
+    ];
+    
+    for (const pattern of patterns) {
+        const match = cleanText.match(pattern);
+        if (match) {
+            let num = parseFloat(match[1].replace(/[,\s]/g, '').replace(',', '.'));
+            
+            if (cleanText.includes('млн')) {
+                num *= 1000000;
+            } else if (cleanText.includes('тыс')) {
+                num *= 1000;
+            }
+            
+            const result = Math.floor(num);
+            console.log(`Parsed "${viewsText}" as ${result}`);
+            return result;
+        }
+    }
+    
+    console.log(`Could not parse views: "${viewsText}"`);
+    return 0;
 };
 
 const waitForApifyCompletion = async (runId, token) => {
