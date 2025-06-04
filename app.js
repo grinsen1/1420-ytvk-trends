@@ -1384,7 +1384,7 @@ ${promptData}
 }
 
 console.log('📝 Prepared prompt length:', basePrompt.length);
-    }
+    };
 // Mass Analysis
 const massAnalyzeVideos = async (platform) => {
     try {
