@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мультиплатформенный анализ трендовых видео</title>
     <link rel="stylesheet" href="style.css">
-    <!-- X-Frame-Bypass Web Component -->
-    <script type="module" src="https://unpkg.com/x-frame-bypass"></script>
 </head>
 <body>
     <div class="container">
@@ -152,111 +150,38 @@
             </div>
         </section>
 
-        <!-- VK Video Platform with iframe bypass methods -->
+        <!-- VK Video Platform -->
         <section id="vk-platform" class="platform-content hidden">
             <div class="platform-controls card mb-8">
                 <div class="card__body">
-                    <h3 class="vk-heading">VK Video Trends - Обход iframe ограничений</h3>
+                    <button class="btn btn--primary" id="load-vk-trends">Загрузить тренды VK Video</button>
                     
-                    <div class="vk-info-banner">
-                        <p><strong>🚫 VK Video запрещает прямую подгрузку в iframe.</strong></p>
-                        <p>Выберите один из методов обхода ограничений ниже:</p>
-                    </div>
-
-                    <!-- Method selection buttons -->
-                    <div class="bypass-methods">
-                        <div class="method-group">
-                            <h4>Метод 1: CORS-прокси интеграция</h4>
-                            <div class="method-controls">
-                                <select class="form-control proxy-selector" id="cors-proxy-select">
-                                    <option value="allorigins">AllOrigins (api.allorigins.win)</option>
-                                    <option value="corslol">CORS.lol (api.cors.lol)</option>
-                                    <option value="thingproxy">ThingProxy (thingproxy.freeboard.io)</option>
-                                </select>
-                                <button class="btn btn--bypass" id="cors-proxy-btn">
-                                    <span class="btn-icon">🌐</span>
-                                    Загрузить через CORS-прокси
-                                </button>
-                                <div class="method-status" id="cors-proxy-status"></div>
-                            </div>
+                    <div class="vk-iframe-container mt-8 hidden" id="vk-iframe-container">
+                        <div class="iframe-info mb-8">
+                            <p class="form-help-text">
+                                <strong>Инструкция:</strong> Дождитесь загрузки страницы и пройдите капчу при необходимости. 
+                                После полной загрузки страницы с трендами нажмите кнопку "Проанализировать".
+                            </p>
                         </div>
-
-                        <div class="method-group">
-                            <h4>Метод 2: X-Frame-Bypass компонент</h4>
-                            <div class="method-controls">
-                                <button class="btn btn--bypass" id="xframe-bypass-btn">
-                                    <span class="btn-icon">🔧</span>
-                                    Загрузить с X-Frame-Bypass
-                                </button>
-                                <div class="method-status" id="xframe-bypass-status"></div>
-                            </div>
+                        <iframe id="vk-trends-iframe" src="" frameborder="0"></iframe>
+                        <div class="iframe-controls mt-8">
+                            <button class="btn btn--secondary" id="analyze-vk-page" disabled>Проанализировать загруженную страницу</button>
+                            <button class="btn btn--outline" id="reload-vk-iframe">Перезагрузить</button>
                         </div>
-
-                        <div class="method-group">
-                            <h4>Метод 3: Popup окно</h4>
-                            <div class="method-controls">
-                                <button class="btn btn--bypass" id="popup-btn">
-                                    <span class="btn-icon">🪟</span>
-                                    Открыть в popup
-                                </button>
-                                <div class="method-status" id="popup-status"></div>
-                            </div>
-                        </div>
-
-                        <div class="method-group">
-                            <h4>Метод 4: Browser Extension Helper</h4>
-                            <div class="method-controls">
-                                <button class="btn btn--bypass btn--info" id="extension-helper-btn">
-                                    <span class="btn-icon">🧩</span>
-                                    Инструкции по расширению
-                                </button>
-                                <div class="method-status" id="extension-status"></div>
-                            </div>
-                        </div>
-
-                        <div class="method-group">
-                            <h4>Метод 5: Serverless функции</h4>
-                            <div class="method-controls">
-                                <button class="btn btn--bypass btn--info" id="serverless-btn">
-                                    <span class="btn-icon">☁️</span>
-                                    Инструкции для деплоя
-                                </button>
-                                <div class="method-status" id="serverless-status"></div>
-                            </div>
+                        <div class="iframe-status mt-8" id="iframe-status">
+                            <div class="loading-indicator">Загрузка страницы трендов...</div>
                         </div>
                     </div>
-
-                    <!-- Loading progress -->
-                    <div class="vk-loading-container mt-8 hidden" id="vk-loading">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="vk-progress-fill" style="width: 0%"></div>
-                        </div>
-                        <p class="progress-text" id="vk-progress-text">Инициализация...</p>
-                    </div>
-
-                    <!-- X-Frame-Bypass iframe container -->
-                    <div class="xframe-container mt-8 hidden" id="xframe-container">
-                        <x-frame-bypass src="https://vkvideo.ru/trends" id="xframe-bypass-iframe"></x-frame-bypass>
-                        <button class="btn btn--secondary mt-8" id="parse-xframe-btn">📊 Анализировать видео</button>
-                    </div>
-
-                    <!-- Results area -->
-                    <div class="bypass-results mt-8 hidden" id="bypass-results">
-                        <h5>Результаты парсинга:</h5>
-                        <div class="results-summary" id="results-summary"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Instructions modal -->
-            <div class="modal hidden" id="instructions-modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 id="modal-title">Инструкции</h4>
-                        <button class="modal-close" id="modal-close">&times;</button>
-                    </div>
-                    <div class="modal-body" id="modal-body">
-                        <!-- Dynamic content -->
+                    
+                    <div class="required-fields-info mt-8">
+                        <h4>VK Video - Парсинг трендов</h4>
+                        <ul>
+                            <li>• Нажмите "Загрузить тренды VK Video" для отображения iframe</li>
+                            <li>• Дождитесь полной загрузки страницы</li>
+                            <li>• Пройдите капчу если потребуется</li>
+                            <li>• Нажмите "Проанализировать загруженную страницу"</li>
+                        </ul>
+                        <p><strong>Метод:</strong> Парсинг через iframe с прокси-страницей</p>
                     </div>
                 </div>
             </div>
