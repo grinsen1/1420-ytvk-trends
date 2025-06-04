@@ -1565,6 +1565,14 @@ const initElements = () => {
         vkApiCheck: document.getElementById('vk-api-check'),
         vkMaxResults: document.getElementById('vk-max-results'),
         vkTargetUrl: document.getElementById('vk-target-url'),
+
+        methodologyLink: document.getElementById('methodology-link'),
+methodologyModal: document.getElementById('methodology-modal'),
+closeMethodology: document.getElementById('close-methodology'),
+vkErrorContainer: document.getElementById('vk-error-container'),
+vkDebugInfo: document.getElementById('vk-debug-info'),
+debugOutput: document.getElementById('debug-output'),
+apifyProgress: document.getElementById('apify-progress'),
         
         // Export buttons
         exportCsvBtn: document.getElementById('export-csv'),
@@ -1603,7 +1611,23 @@ const initEventListeners = () => {
     elements.loadVkBtn.addEventListener('click', fetchVkVideos);
     }
 
-    
+    // Методология
+if (elements.methodologyLink) {
+    elements.methodologyLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (elements.methodologyModal) {
+            elements.methodologyModal.classList.remove('hidden');
+        }
+    });
+}
+
+if (elements.closeMethodology) {
+    elements.closeMethodology.addEventListener('click', () => {
+        if (elements.methodologyModal) {
+            elements.methodologyModal.classList.add('hidden');
+        }
+    });
+}
     // Mass analyze buttons
     if (elements.youtubeMassAnalyzeBtn) {
         elements.youtubeMassAnalyzeBtn.addEventListener('click', () => massAnalyzeVideos('youtube'));
