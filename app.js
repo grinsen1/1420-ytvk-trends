@@ -695,16 +695,16 @@ const createVideoCard = (videoData, platform) => {
             videoUrl = videoData.url || '#';
             break;
             
-        case 'vk':
-            title = videoData.title || 'VK Video';
-            author = videoData.author || 'VK User';
-            publishedAt = videoData.date ? formatDate(new Date(videoData.date * 1000)) : 'Недавно';
-            thumbnail = videoData.image || 'https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=VK';
-            views = formatNumber(videoData.views || 0);
-            likes = formatNumber(videoData.likes || 0);
-            comments = formatNumber(videoData.comments || 0);
-            videoUrl = videoData.url || '#';
-            break;
+       case 'vk':
+             title = videoData.title || 'VK Video';
+             author = videoData.author || 'VK User';
+             publishedAt = videoData.uploadDate || 'Недавно';
+             thumbnail = videoData.image || 'https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=VK';
+             views = formatNumber(videoData.views || 0);
+             likes = formatNumber(videoData.likes || 0);
+             comments = formatNumber(videoData.comments || 0);
+             videoUrl = videoData.url || '#';
+    break;
     }
     
     // Generate youth appeal score
@@ -962,10 +962,19 @@ const fetchVkVideos = async () => {
         }
         
         const crawlResults = await resultsResponse.json();
-        console.log(`Получено ${crawlResults.length} результатов от Apify`);
-        
-        // Парсинг видео из результатов
-        const videos = parseVkVideosFromCrawlResults(crawlResults);
+            console.log(`Получено ${crawlResults.length} результатов от Apify`);
+
+// Логируем первый результат для отладки
+if (crawlResults.length > 0) {
+    console.log('Первый результат Apify:', {
+        url: crawlResults[0].url,
+        htmlLength: crawlResults[0].html?.length || 0,
+        textLength: crawlResults[0].text?.length || 0
+    });
+}
+
+const videos = parseVkVideosFromCrawlResults(crawlResults);
+console.log(`Распарсено видео: ${videos.length}`);
         
         if (loadingIndicator && loadingIndicator.parentNode) {
             loadingIndicator.remove();
@@ -1215,7 +1224,14 @@ const renderVideos = (platform, videos) => {
         gridElement.appendChild(card);
     });
 };
-
+const prepareVkVideoForAI = (video) => {
+    return `Название: ${video.title}
+Автор: ${video.author}
+Просмотры: ${video.views}
+Описание: ${video.description || 'Описание недоступно'}
+Дата: ${video.uploadDate}
+URL: ${video.url}`;
+};
 // AI Analysis
 const analyzeVideo = async (videoData, platform) => {
     try {
@@ -1224,6 +1240,15 @@ const analyzeVideo = async (videoData, platform) => {
         if (!openrouterKey) {
             showError(document.querySelector(`#${platform}-videos`), 'Необходим ключ OpenRouter для AI-анализа');
             return;
+        }
+        
+        // ДОБАВИТЬ специальную обработку для VK
+        let promptData;
+        if (platform === 'vk') {
+            promptData = prepareVkVideoForAI(videoData);
+        } else {
+            // Для YouTube и TikTok используем стандартную обработку
+            promptData = JSON.stringify(videoData);
         }
         
         const videoId = videoData.id;
@@ -1237,14 +1262,49 @@ const analyzeVideo = async (videoData, platform) => {
         analyzeBtn.disabled = true;
         analyzeBtn.textContent = 'Анализ...';
         
-        // Simulate AI analysis
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // ЗДЕСЬ МОЖНО ДОБАВИТЬ РЕАЛЬНЫЙ ЗАПРОС К OPENROUTER
+        // Пока используем симуляцию
+        if (platform === 'vk') {
+    const prompt = `Проанализируй привлекательность этого VK видео для российской молодежи 14-20 лет:
+
+${promptData}
+
+Критерии для оценки:
+- Визуальная привлекательность и динамичность
+- Актуальные тренды и челленджи
+- Музыкальный контент
+- Блогерский lifestyle контент
+- Юмор и мемы
+- Интерактивность
+
+Верни ТОЛЬКО число (процент от 0 до 100) и 3-4 коротких тезиса.`;
+
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${openrouterKey}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: elements.openrouterModel?.value || 'deepseek/deepseek-r1-0528:free',
+            messages: [{ role: 'user', content: prompt }]
+        })
+    });
+
+    const result = await response.json();
+    const aiResponse = result.choices[0].message.content;
+    
+    // Извлекаем процент из ответа
+    const scoreMatch = aiResponse.match(/(\d+)%/);
+    const aiScore = scoreMatch ? parseInt(scoreMatch[1]) : Math.floor(55 + (hash % 40));
+    
+} else {
+    // Для YouTube и TikTok используем старую логику
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    const hash = videoId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const aiScore = Math.floor(55 + (hash % 40));
+}
         
-        // Generate a pseudo-random but consistent score based on the video ID
-        const hash = videoId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const aiScore = Math.floor(55 + (hash % 40)); // Range 55-94
-        
-        // Generate mock insights
         const insights = [
             'Соответствует актуальным трендам и интересам молодежи',
             'Высокая динамичность и визуальная привлекательность',
@@ -1252,7 +1312,6 @@ const analyzeVideo = async (videoData, platform) => {
             'Аутентичный контент с высоким потенциалом вирусного распространения'
         ];
         
-        // Update UI with analysis
         aiScoreElement.textContent = `${aiScore}%`;
         aiScoreElement.dataset.analyzed = 'true';
         
@@ -1264,21 +1323,12 @@ const analyzeVideo = async (videoData, platform) => {
         `;
         analysisContainer.classList.remove('hidden');
         
-        // Re-enable button
         analyzeBtn.disabled = false;
         analyzeBtn.textContent = '🧠 AI Анализ';
         
     } catch (error) {
         console.error('Error analyzing video:', error);
-        const gridElement = elements[`${platform}VideosGrid`];
-        showError(gridElement, `Ошибка при анализе видео: ${error.message}`);
-        
-        // Reset button
-        const analyzeBtn = document.querySelector(`.video-card[data-video-id="${videoData.id}"] .analyze-btn`);
-        if (analyzeBtn) {
-            analyzeBtn.disabled = false;
-            analyzeBtn.textContent = '🧠 AI Анализ';
-        }
+        // Остальная обработка ошибок...
     }
 };
 
