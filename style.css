@@ -1898,3 +1898,67 @@ input[type="checkbox"]:checked {
   background: var(--color-primary);
   border-color: var(--color-primary);
 }
+
+/* Модальное окно методики */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 600px;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #000;
+}
+
+/* Отладочная информация */
+.debug-info {
+    background: #f5f5f5;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.debug-info pre {
+    background: #fff;
+    padding: 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 12px;
+    max-height: 200px;
+}
+
+/* Прогресс Apify */
+.apify-progress {
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+}
+
+/* Контейнер ошибок */
+.error-container {
+    min-height: 0;
+}
