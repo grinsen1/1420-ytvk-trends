@@ -1396,6 +1396,21 @@ const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 temperature: 0.7
             })
         });
+        console.log('📡 Response status:', response.status);
+console.log('📡 Response ok:', response.ok);
+
+const result = await response.json();
+console.log('📄 Full API response:', result);
+if (result.choices) {
+    console.log('✅ Choices found:', result.choices.length);
+    console.log('📝 First choice:', result.choices[0]);
+} else {
+    console.log('❌ No choices in response');
+    if (result.error) {
+        console.log('❌ API Error:', result.error);
+    }
+}
+
         
         const result = await response.json();
         const aiResponse = result.choices[0].message.content;
@@ -1406,9 +1421,14 @@ const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         
         // Обновляем UI
         const aiScoreElement = document.querySelector(`.video-card[data-video-id="${videoData.id}"] .ai-score`);
+        console.log('🎯 AI Score Element found:', !!aiScoreElement);
         if (aiScoreElement) {
             aiScoreElement.textContent = `${aiScore}%`;
-        }
+console.log('✅ Updated AI score to:', aiScore);
+const aiScoreElement = document.querySelector(`.video-card[data-video-id="${videoData.id}"] .ai-score`);
+} else {
+    console.log('❌ AI Score Element not found for video:', videoData.id);
+}
 
 } catch (error) {
         console.error('Error analyzing video:', error);
