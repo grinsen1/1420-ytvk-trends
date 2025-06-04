@@ -1384,7 +1384,31 @@ ${promptData}
 }
 
 console.log('📝 Prepared prompt length:', basePrompt.length);
-
+const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${openrouterKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: elements.openrouterModel?.value || 'deepseek/deepseek-r1-0528:free',
+                messages: [{ role: 'user', content: basePrompt }],
+                temperature: 0.7
+            })
+        });
+        
+        const result = await response.json();
+        const aiResponse = result.choices[0].message.content;
+        
+        // Извлекаем процент
+        const scoreMatch = aiResponse.match(/(\d+)%?/);
+        aiScore = scoreMatch ? parseInt(scoreMatch[1]) : 75;
+        
+        // Обновляем UI
+        const aiScoreElement = document.querySelector(`.video-card[data-video-id="${videoData.id}"] .ai-score`);
+        if (aiScoreElement) {
+            aiScoreElement.textContent = `${aiScore}%`;
+        }
 
 } catch (error) {
         console.error('Error analyzing video:', error);
