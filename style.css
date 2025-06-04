@@ -1423,9 +1423,69 @@ select.form-control {
   margin-top: var(--space-4);
 }
 
-/* VK iframe styles */
+/* Apify Configuration */
+.apify-info {
+  background: var(--color-background);
+  padding: var(--space-12);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  margin-top: var(--space-8);
+}
 
+.apify-info h5 {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-6);
+  color: var(--color-primary);
+}
 
+.apify-info ul {
+  margin: 0;
+  padding-left: var(--space-16);
+}
+
+.apify-info li {
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Apify Status Indicators */
+.apify-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--font-size-sm);
+}
+
+.apify-progress {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary);
+}
+
+/* Apify Loading States */
+.apify-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-12);
+  background: var(--color-secondary);
+  border-radius: var(--radius-base);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.apify-loading::before {
+  content: "⚡";
+  animation: pulse 1.5s ease-in-out infinite;
+  font-size: var(--font-size-lg);
+  color: var(--color-primary);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
 /* Videos Grid */
 .videos-grid {
   display: grid;
@@ -1631,6 +1691,67 @@ select.form-control {
 .methodology-link:hover {
   color: var(--color-primary);
 }
+/* Apify Error States */
+.apify-error {
+  background: rgba(var(--color-error-rgb), 0.1);
+  color: var(--color-error);
+  padding: var(--space-12);
+  border-radius: var(--radius-base);
+  border: 1px solid rgba(var(--color-error-rgb), 0.3);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-8);
+}
+
+.apify-error .error-title {
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-4);
+}
+
+.apify-error .error-solution {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-4);
+}
+
+/* Apify Success States */
+.apify-success {
+  background: rgba(var(--color-success-rgb), 0.1);
+  color: var(--color-success);
+  padding: var(--space-8);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(var(--color-success-rgb), 0.3);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.apify-success::before {
+  content: "✓";
+  font-weight: var(--font-weight-bold);
+}
+
+/* Pricing Information */
+.pricing-info {
+  background: var(--color-background);
+  padding: var(--space-12);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  margin-top: var(--space-8);
+}
+
+.pricing-info p {
+  margin: var(--space-4) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.pricing-info p:first-child {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+
 
 /* Error States */
 .error-message {
@@ -1684,9 +1805,55 @@ select.form-control {
   .config-group .flex {
     gap: var(--space-8);
   }
+
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding-left: var(--space-8);
+    padding-right: var(--space-8);
+  }
   
-  #vk-trends-iframe {
-    height: 60vh;
+  .video-content {
+    padding: var(--space-8);
+  }
+  
+  .video-stats {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  
+
+}
+@media (max-width: 768px) {
+  .tabs {
+    flex-direction: column;
+  }
+  
+  .tab-btn {
+    border-bottom: 1px solid var(--color-border);
+    border-right: none;
+  }
+  
+  .tab-btn.active {
+    border-bottom-color: var(--color-primary);
+  }
+  
+  .videos-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .flex {
+    flex-direction: column;
+  }
+  
+  .config-group .flex {
+    gap: var(--space-8);
+  }
+  
+  /* Apify responsive */
+  .apify-info {
+    padding: var(--space-8);
   }
 }
 
@@ -1705,11 +1872,13 @@ select.form-control {
     gap: var(--space-4);
   }
   
-  #vk-trends-iframe {
-    height: 50vh;
+  /* Apify mobile optimization */
+  .apify-status {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
   }
 }
-
 /* Text utilities */
 .text-center {
   text-align: center;
