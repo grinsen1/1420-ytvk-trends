@@ -991,7 +991,7 @@ if (!runId.match(/^[a-zA-Z0-9]+$/)) {
         
         // Получение результатов
         const resultsResponse = await fetch(
-            `https://api.apify.com/v2/acts/apify~website-content-crawler/runs/${runId}/dataset/items?token=${apifyToken}&format=json&clean=true`
+            `https://api.apify.com/v2/actor-runs/${runId}/dataset/items?token=${apifyToken}&format=json&clean=true`
         );
         
         console.log('📊 Results response status:', resultsResponse.status);
@@ -1253,7 +1253,7 @@ const waitForApifyCompletion = async (runId, token) => {
     while (Date.now() - startTime < maxWaitTime) {
         try {
             // ИСПРАВЛЕННЫЙ URL согласно документации Apify API
-            const statusUrl = `https://api.apify.com/v2/acts/runs/${runId}?token=${token}`;
+            const statusUrl = `https://api.apify.com/v2/actor-runs/${runId}?token=${token}`;
             console.log(`📡 Checking status at: ${statusUrl}`);
             
             const statusResponse = await fetch(statusUrl, {
