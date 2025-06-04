@@ -944,18 +944,26 @@ const fetchVkVideos = async () => {
         }
         
         const runData = await runResponse.json();
-        console.log('📋 Run data received:', runData);
-        
-        if (!runData || !runData.data) {
-            throw new Error('Неверный формат ответа от Apify API при создании run');
-        }
-        
-        const runId = runData.data.id;
-        console.log('🆔 Run ID:', runId);
-        
-        if (!runId) {
-            throw new Error('Не получен ID run от Apify API');
-        }
+console.log('📋 Run data received:', runData);
+
+if (!runData || !runData.data) {
+    throw new Error('Неверный формат ответа от Apify API при создании run');
+}
+
+const runId = runData.data.id;
+console.log('🆔 Run ID:', runId);
+
+// ДОБАВИТЬ дополнительную проверку
+if (!runId || runId.trim() === '') {
+    console.error('❌ Empty or invalid run ID received:', runData);
+    throw new Error('Получен пустой или невалидный Run ID от Apify API');
+}
+
+// ДОБАВИТЬ проверку формата runId
+if (!runId.match(/^[a-zA-Z0-9]+$/)) {
+    console.error('❌ Invalid run ID format:', runId);
+    throw new Error(`Неверный формат Run ID: ${runId}`);
+}
         
         // Обновляем индикатор
         if (loadingIndicator) {
@@ -1231,60 +1239,96 @@ const waitForApifyCompletion = async (runId, token) => {
     const checkInterval = 10000; // 10 секунд
     const startTime = Date.now();
     
-    console.log('Starting wait for completion, runId:', runId, 'token length:', token ? token.length : 'no token');
+    console.log(`⏳ Waiting for Apify run completion: ${runId}`);
+    console.log(`🔑 Using token: ${token ? token.substring(0, 10) + '...' : 'NO TOKEN'}`);
+    
+    if (!runId) {
+        throw new Error('Run ID is missing or empty');
+    }
+    
+    if (!token) {
+        throw new Error('API token is missing or empty');
+    }
     
     while (Date.now() - startTime < maxWaitTime) {
         try {
-            const statusResponse = await fetch(
-                `https://api.apify.com/v2/acts/runs/${runId}?token=${token}`
-            );
+            // ИСПРАВЛЕННЫЙ URL согласно документации Apify API
+            const statusUrl = `https://api.apify.com/v2/acts/runs/${runId}?token=${token}`;
+            console.log(`📡 Checking status at: ${statusUrl}`);
+            
+            const statusResponse = await fetch(statusUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            console.log(`📊 Status response: ${statusResponse.status} ${statusResponse.statusText}`);
             
             if (!statusResponse.ok) {
-                throw new Error(`Status check failed: ${statusResponse.status} ${statusResponse.statusText}`);
+                // Логируем детали ошибки
+                const errorText = await statusResponse.text();
+                console.error(`❌ Status check error details:`, {
+                    status: statusResponse.status,
+                    statusText: statusResponse.statusText,
+                    body: errorText,
+                    url: statusUrl
+                });
+                
+                if (statusResponse.status === 404) {
+                    throw new Error(`Run ${runId} not found. Возможно run был удален или не существует.`);
+                } else if (statusResponse.status === 401) {
+                    throw new Error('Unauthorized: проверьте правильность API токена');
+                } else if (statusResponse.status === 403) {
+                    throw new Error('Forbidden: недостаточно прав для доступа к run');
+                } else {
+                    throw new Error(`HTTP ${statusResponse.status}: ${errorText}`);
+                }
             }
             
             const statusData = await statusResponse.json();
+            console.log(`📋 Status data received:`, statusData);
             
-            // ИСПРАВЛЕНИЕ: Проверяем наличие поля data
-            if (!statusData) {
-                console.warn('Получен пустой ответ от Apify API');
-                await new Promise(resolve => setTimeout(resolve, checkInterval));
-                continue;
-            }
-            
-            if (!statusData.data) {
-                console.warn('Отсутствует поле data в ответе Apify API:', statusData);
+            if (!statusData || !statusData.data) {
+                console.warn('⚠️ Invalid status response format:', statusData);
                 await new Promise(resolve => setTimeout(resolve, checkInterval));
                 continue;
             }
             
             const status = statusData.data.status;
-            console.log(`Run status: ${status}`);
+            console.log(`🔄 Current run status: ${status}`);
             
             if (status === 'SUCCEEDED') {
-                console.log('Apify run completed successfully');
+                console.log('✅ Apify run completed successfully');
                 return statusData.data;
-            } else if (status === 'FAILED' || status === 'ABORTED' || status === 'TIMED-OUT') {
-                const errorMessage = statusData.data.statusMessage || `Run ${status.toLowerCase()}`;
-                throw new Error(`Apify run ${status.toLowerCase()}: ${errorMessage}`);
+            } else if (status === 'FAILED') {
+                const errorMessage = statusData.data.statusMessage || 'Run failed without details';
+                throw new Error(`Apify run failed: ${errorMessage}`);
+            } else if (status === 'ABORTED') {
+                throw new Error('Apify run was aborted');
+            } else if (status === 'TIMED-OUT') {
+                throw new Error('Apify run timed out');
             }
             
             // Показываем прогресс если доступен
             if (statusData.data.stats) {
                 const stats = statusData.data.stats;
-                console.log(`Progress: ${stats.itemsCount || 0} items, ${stats.requestsFinished || 0} requests finished`);
+                console.log(`📈 Progress: ${stats.itemsCount || 0} items, ${stats.requestsFinished || 0} requests finished`);
             }
             
         } catch (error) {
-            console.error('Error checking run status:', error);
+            console.error('❌ Error checking run status:', error);
             
-            // Если это сетевая ошибка, продолжаем попытки
-            if (error.name === 'TypeError' || error.message.includes('fetch')) {
-                console.log('Network error, retrying...');
-            } else {
-                // Для других ошибок прерываем
+            // Если это наша кастомная ошибка, прерываем
+            if (error.message.includes('not found') || 
+                error.message.includes('Unauthorized') || 
+                error.message.includes('failed:')) {
                 throw error;
             }
+            
+            // Для сетевых ошибок продолжаем попытки
+            console.log('🔄 Network error, will retry...');
         }
         
         await new Promise(resolve => setTimeout(resolve, checkInterval));
