@@ -997,86 +997,129 @@ const parseVkVideosFromCrawlResults = (crawlResults) => {
     const videos = [];
     
     if (!crawlResults || crawlResults.length === 0) {
+        console.warn('Нет данных от Apify Website Content Crawler');
         return videos;
     }
     
-    const htmlContent = crawlResults[0]?.text || '';
+    console.log('Parsing VK videos from Apify results:', crawlResults.length);
     
-    // Создаем временный DOM для парсинга
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlContent, 'text/html');
+    // Берем первый результат (главная страница трендов)
+    const mainResult = crawlResults[0];
+    const htmlContent = mainResult.html || mainResult.text || '';
     
-    // Ищем видео элементы по различным селекторам
-    const videoSelectors = [
-        '.video-item',
-        '.VideoItem',
-        '[data-video-id]',
-        '.video-card',
-        'a[href*="/video"]'
-    ];
-    
-    let videoElements = [];
-    for (const selector of videoSelectors) {
-        videoElements = doc.querySelectorAll(selector);
-        if (videoElements.length > 0) break;
+    if (!htmlContent) {
+        console.warn('HTML контент отсутствует в результатах Apify');
+        return videos;
     }
     
-    videoElements.forEach((element, index) => {
+    // Создаем временный DOM для парсинга
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    
+    // Ищем все видео блоки по data-id атрибуту
+    const videoElements = tempDiv.querySelectorAll('[data-id^="video_item_"], div[id^="video_item_"]');
+    
+    console.log(`Найдено ${videoElements.length} видео элементов`);
+    
+    videoElements.forEach((videoElement, index) => {
         try {
-            const titleElement = element.querySelector('.video-title, .title, h3, h4') || element;
-            const title = titleElement?.textContent?.trim() || `VK Video ${index + 1}`;
+            // Извлекаем ID видео
+            const videoId = videoElement.getAttribute('data-id') || 
+                           videoElement.id.replace('video_item_', '') || 
+                           `vk-${index + 1}`;
             
-            const authorElement = element.querySelector('.author, .channel, .user-name');
-            const author = authorElement?.textContent?.trim() || 'VK User';
+            // Извлекаем ссылку на видео
+            const linkElement = videoElement.querySelector('a[href*="vkvideo.ru/video"], a[href*="vk.com/video"]');
+            const videoUrl = linkElement ? linkElement.href : `https://vkvideo.ru/video${videoId}`;
             
-            const viewsElement = element.querySelector('.views, .view-count, [data-views]');
-            const viewsText = viewsElement?.textContent?.trim() || '0';
-            const views = parseInt(viewsText.replace(/[^\d]/g, '')) || 0;
+            // Извлекаем заголовок из aria-label или alt атрибута
+            let title = '';
+            if (linkElement && linkElement.getAttribute('aria-label')) {
+                title = linkElement.getAttribute('aria-label')
+                    .replace(/^Видео\s+/, '')
+                    .replace(/\s+длительностью.*$/, '')
+                    .trim();
+            }
             
-            const linkElement = element.querySelector('a[href]') || element;
-            const url = linkElement?.href || `https://vkvideo.ru/video${index}`;
+            if (!title) {
+                const imgElement = videoElement.querySelector('img[alt]');
+                title = imgElement ? imgElement.alt : `VK Video ${index + 1}`;
+            }
             
-            const imgElement = element.querySelector('img');
-            const thumbnail = imgElement?.src || `https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=VK+${index + 1}`;
+            // Извлекаем тамбнейл
+            const imgElement = videoElement.querySelector('img[src], img[data-thumb]');
+            const thumbnail = imgElement ? 
+                (imgElement.src || imgElement.getAttribute('data-thumb')) : 
+                `https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=VK+${index + 1}`;
             
-            const videoId = url.match(/video(-?\d+_\d+)/) ? 
-                url.match(/video(-?\d+_\d+)/)[1] : 
-                `vk-${index + 1}`;
+            // Извлекаем статистику из span элементов
+            const statsElements = videoElement.querySelectorAll('span');
+            let views = 0;
+            let uploadDate = 'Недавно';
+            let description = '';
             
-            videos.push({
-                id: videoId,
-                title: title,
-                author: author,
-                views: views,
-                likes: Math.floor(views * 0.05), // примерная оценка
-                comments: Math.floor(views * 0.01), // примерная оценка
-                date: Math.floor(Date.now() / 1000) - (index * 3600), // примерные даты
-                image: thumbnail,
-                url: url
+            statsElements.forEach(span => {
+                const text = span.textContent.trim();
+                
+                // Ищем просмотры
+                if (text.includes('просмотр') || text.includes('млн') || text.includes('тыс')) {
+                    const viewsMatch = text.match(/([\d,]+(?:\.\d+)?)\s*(млн|тыс)?/);
+                    if (viewsMatch) {
+                        let viewsNum = parseFloat(viewsMatch[1].replace(',', '.'));
+                        if (viewsMatch[2] === 'млн') viewsNum *= 1000000;
+                        if (viewsMatch[2] === 'тыс') viewsNum *= 1000;
+                        views = Math.floor(viewsNum);
+                    }
+                }
+                
+                // Ищем дату
+                if (text.includes('день') || text.includes('час') || text.includes('минут') || text.includes('назад')) {
+                    uploadDate = text;
+                }
+                
+                // Ищем описание (длинный текст)
+                if (text.length > 50 && !text.includes('просмотр') && !text.includes('назад')) {
+                    description = text.substring(0, 200) + '...';
+                }
             });
             
+            // Извлекаем автора канала (если есть)
+            let author = 'VK User';
+            const authorElements = videoElement.querySelectorAll('*');
+            for (let elem of authorElements) {
+                const text = elem.textContent?.trim();
+                if (text && text.length > 3 && text.length < 50 && 
+                    !text.includes('просмотр') && !text.includes('назад') && 
+                    !text.includes('млн') && !text.includes('тыс') &&
+                    !text.match(/^\d/)) {
+                    author = text;
+                    break;
+                }
+            }
+            
+            const videoData = {
+                id: videoId,
+                title: title || `Трендовое видео VK ${index + 1}`,
+                author: author,
+                views: views,
+                likes: Math.floor(views * 0.05), // Примерная оценка лайков
+                comments: Math.floor(views * 0.01), // Примерная оценка комментариев  
+                date: Math.floor(Date.now() / 1000) - (index * 3600), // Примерные даты
+                image: thumbnail,
+                url: videoUrl,
+                description: description || 'Описание недоступно',
+                uploadDate: uploadDate
+            };
+            
+            videos.push(videoData);
+            console.log(`Parsed video ${index + 1}:`, videoData.title);
+            
         } catch (error) {
-            console.warn('Error parsing video element:', error);
+            console.error(`Ошибка парсинга видео ${index + 1}:`, error);
         }
     });
     
-    // Если не нашли видео через селекторы, создаем mock данные
-    if (videos.length === 0) {
-        for (let i = 1; i <= 10; i++) {
-            videos.push({
-                id: `vk-crawled-${i}`,
-                title: `Трендовое видео VK ${i}`,
-                author: `VK Creator ${i}`,
-                views: Math.floor(Math.random() * 1000000) + 50000,
-                likes: Math.floor(Math.random() * 50000) + 1000,
-                comments: Math.floor(Math.random() * 5000) + 100,
-                date: Math.floor(Date.now() / 1000) - (i * 3600),
-                image: `https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=VK+${i}`,
-                url: `https://vkvideo.ru/video${i}`
-            });
-        }
-    }
-    
+    console.log(`Успешно распарсено ${videos.length} видео`);
     return videos.slice(0, 20); // Ограничиваем до 20 видео
 };
 
