@@ -21,7 +21,7 @@ const CONFIG = {
         },
         vk: {
             name: "VK Video",
-            proxyUrl: "http://www.thermona-ekb.ru/errors.php?q=aHR0cHM6Ly92a3ZpZGVvLnJ1L3RyZW5kcw%3D%3D&hl=2cd"
+            proxyUrl: "https://wikipedia.org"
         }
     },
     openrouter: {
