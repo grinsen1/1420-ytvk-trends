@@ -1383,7 +1383,13 @@ ${promptData}
 ВЕРНИ ТОЛЬКО число (процент от 0 до 100) и 3-4 коротких тезиса почему именно такая оценка для аудитории 14-20 лет.`;
 }
 
-console.log('📝 Prepared prompt length:', basePrompt.length);}
+console.log('📝 Prepared prompt length:', basePrompt.length);
+
+
+} catch (error) {
+        console.error('Error analyzing video:', error);
+    }
+
     };
 // Mass Analysis
 const massAnalyzeVideos = async (platform) => {
