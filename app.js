@@ -21,7 +21,7 @@ const CONFIG = {
         },
      vk: {
     name: "VK Video", 
-    apifyActor: "apify/website-content-crawler",
+    apifyActor: "apify~website-content-crawler",
     apiEndpoint: "https://api.apify.com/v2/acts",
     targetUrl: "https://vkvideo.ru/trends",
     crawlParams: {
