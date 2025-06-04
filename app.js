@@ -305,7 +305,7 @@ const CONFIG = {
             },
             {
                 "name": "remixsts",
-                "value": "%7B%22data%22%3A%5B%5B1749054984%2C%22unique_adblock_users%22%2C0%2C%22web2%22%2C%22true%22%2C%22resource%22%2C%22video%22%5D%2C%5B1749054984%2C%22unique_adblock_users%22%2C0%2C%22web2%22%2C%22true%22%2C%22resource%22%2C%22video%22%5D%5D%2C%22uniqueId%22%3A380364391.4830178%7D",
+                "value": "%7B%22data%22%3A%5B%5B1749054984%2C%22unique_adblock_s%22%2C0%2C%22web2%22%2C%22true%22%2C%22resource%22%2C%22video%22%5D%2C%5B1749054984%2C%22unique_adblock_s%22%2C0%2C%22web2%22%2C%22true%22%2C%22resource%22%2C%22video%22%5D%5D%2C%22uniqueId%22%3A380364391.4830178%7D",
                 "domain": ".vkvideo.ru",
                 "hostOnly": false,
                 "path": "/",
@@ -681,7 +681,7 @@ const createVideoCard = (videoData, platform) => {
             
        case 'vk':
              title = videoData.title || 'VK Video';
-             author = videoData.author || 'VK User';
+             author = videoData.author || 'VK ';
              publishedAt = videoData.uploadDate || 'Недавно';
              thumbnail = videoData.image || 'https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=VK';
              views = formatNumber(videoData.views || 0);
@@ -727,6 +727,7 @@ const createVideoCard = (videoData, platform) => {
     `;
     
     // Add event listener for analysis button
+      let aiScore = 0;
     const analyzeBtn = card.querySelector('.analyze-btn');
     analyzeBtn.addEventListener('click', () => {
         analyzeVideo(videoData, platform);
@@ -1336,96 +1337,53 @@ const analyzeVideo = async (videoData, platform) => {
             showError(document.querySelector(`#${platform}-videos`), 'Необходим ключ OpenRouter для AI-анализа');
             return;
         }
-        
+          let aiScore = 0;
         // ДОБАВИТЬ специальную обработку для VK
-        let promptData;
-        if (platform === 'vk') {
-            promptData = prepareVkVideoForAI(videoData);
-        } else {
-            // Для YouTube и TikTok используем стандартную обработку
-            promptData = JSON.stringify(videoData);
-        }
-        
-        const videoId = videoData.id;
-        const analysisContainer = document.getElementById(`analysis-${videoId}`);
-        const aiScoreElement = document.querySelector(`.video-card[data-video-id="${videoId}"] .ai-score`);
-        const analyzeBtn = document.querySelector(`.video-card[data-video-id="${videoId}"] .analyze-btn`);
-        
-        if (!analysisContainer || !aiScoreElement || !analyzeBtn) return;
-        
-        // Disable button and show loading
-        analyzeBtn.disabled = true;
-        analyzeBtn.textContent = 'Анализ...';
-        
-        // ЗДЕСЬ МОЖНО ДОБАВИТЬ РЕАЛЬНЫЙ ЗАПРОС К OPENROUTER
-        // Пока используем симуляцию
-        if (platform === 'vk') {
-    const prompt = `Проанализируй привлекательность этого VK видео для российской молодежи 14-20 лет:
+  let promptData;
+let basePrompt;
+
+if (platform === 'vk') {
+    promptData = prepareVkVideoForAI(videoData);
+    basePrompt = `Проанализируй привлекательность этого VK видео для российской молодежи 14-20 лет:
 
 ${promptData}
 
-Критерии для оценки:
+КРИТЕРИИ АНАЛИЗА ДЛЯ АУДИТОРИИ 14-20 ЛЕТ:
 - Визуальная привлекательность и динамичность
-- Актуальные тренды и челленджи
-- Музыкальный контент
-- Блогерский lifestyle контент
-- Юмор и мемы
-- Интерактивность
+- Актуальные тренды и челленджи  
+- Музыкальный контент (рэп, поп, танцевальная музыка)
+- Игровая тематика и киберспорт
+- Блогерский контент и lifestyle
+- Юмор и развлекательность
+- Социальные сети и интернет-культура
+- Образовательный контент в развлекательной форме
+- Интерактивность и участие аудитории
+- Аутентичность и близость к молодежи
 
-Верни ТОЛЬКО число (процент от 0 до 100) и 3-4 коротких тезиса.`;
-
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${openrouterKey}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            model: elements.openrouterModel?.value || 'deepseek/deepseek-r1-0528:free',
-            messages: [{ role: 'user', content: prompt }]
-        })
-    });
-
-    const result = await response.json();
-    const aiResponse = result.choices[0].message.content;
-    
-    // Извлекаем процент из ответа
-    const scoreMatch = aiResponse.match(/(\d+)%/);
-    const aiScore = scoreMatch ? parseInt(scoreMatch[1]) : Math.floor(55 + (hash % 40));
-    
+ВЕРНИ ТОЛЬКО число (процент от 0 до 100) и 3-4 коротких тезиса почему именно такая оценка для аудитории 14-20 лет.`;
 } else {
-    // Для YouTube и TikTok используем старую логику
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    const hash = videoId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const aiScore = Math.floor(55 + (hash % 40));
+    // Для YouTube и TikTok используем стандартную обработку
+    promptData = JSON.stringify(videoData);
+    basePrompt = `Проанализируй привлекательность этого VK видео для российской молодежи 14-20 лет:
+
+${promptData}
+
+КРИТЕРИИ АНАЛИЗА ДЛЯ АУДИТОРИИ 14-20 ЛЕТ:
+- Визуальная привлекательность и динамичность
+- Актуальные тренды и челленджи  
+- Музыкальный контент (рэп, поп, танцевальная музыка)
+- Игровая тематика и киберспорт
+- Блогерский контент и lifestyle
+- Юмор и развлекательность
+- Социальные сети и интернет-культура
+- Образовательный контент в развлекательной форме
+- Интерактивность и участие аудитории
+- Аутентичность и близость к молодежи
+
+ВЕРНИ ТОЛЬКО число (процент от 0 до 100) и 3-4 коротких тезиса почему именно такая оценка для аудитории 14-20 лет.`;
 }
-        
-        const insights = [
-            'Соответствует актуальным трендам и интересам молодежи',
-            'Высокая динамичность и визуальная привлекательность',
-            'Присутствуют элементы юмора и мемов, релевантные для целевой аудитории',
-            'Аутентичный контент с высоким потенциалом вирусного распространения'
-        ];
-        
-        aiScoreElement.textContent = `${aiScore}%`;
-        aiScoreElement.dataset.analyzed = 'true';
-        
-        analysisContainer.innerHTML = `
-            <h5>AI Анализ:</h5>
-            <ul>
-                ${insights.map(insight => `<li>${insight}</li>`).join('')}
-            </ul>
-        `;
-        analysisContainer.classList.remove('hidden');
-        
-        analyzeBtn.disabled = false;
-        analyzeBtn.textContent = '🧠 AI Анализ';
-        
-    } catch (error) {
-        console.error('Error analyzing video:', error);
-        // Остальная обработка ошибок...
-    }
-};
+
+console.log('📝 Prepared prompt length:', basePrompt.length);
 
 // Mass Analysis
 const massAnalyzeVideos = async (platform) => {
