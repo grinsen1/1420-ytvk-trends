@@ -24,14 +24,14 @@ const CONFIG = {
     apifyActor: "apify~website-content-crawler",
     apiEndpoint: "https://api.apify.com/v2/acts",
     runInput: {
-        "aggressivePrune": false,
-        "clickElementsCssSelector": "[aria-expanded=\"false\"]",
-        "clientSideMinChangePercentage": 15,
-        "crawlerType": "playwright:adaptive",
-        "debugLog": false,
-        "debugMode": false,
-        "expandIframes": true,
-        "ignoreCanonicalUrl": false,
+    "aggressivePrune": false,
+    "clientSideMinChangePercentage": 15,
+    "crawlerType": "playwright:adaptive",
+    "debugLog": false,
+    "debugMode": false,
+    "expandIframes": true,
+    "htmlTransformer": "none",
+    "ignoreCanonicalUrl": false,
         "initialCookies": [
             {
                 "name": "_ignoreAutoLogin",
