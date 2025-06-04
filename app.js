@@ -423,38 +423,22 @@ const CONFIG = {
             "apifyProxyGroups": ["RESIDENTIAL"],
             "apifyProxyCountry": "RU"
         },
-        "readableTextCharThreshold": 100,
-        "removeCookieWarnings": true,
-        "removeElementsCssSelector": "nav, footer, script, style, noscript, svg, img[src^='data:'],\n[role=\"alert\"],\n[role=\"banner\"],\n[role=\"dialog\"],\n[role=\"alertdialog\"],\n[role=\"region\"][aria-label*=\"skip\" i],\n[aria-modal=\"true\"]",
-        "renderingTypeDetectionPercentage": 10,
-        "respectRobotsTxtFile": true,
-        "saveFiles": false,
-        "saveHtml": true,
-        "saveHtmlAsFile": false,
-        "saveMarkdown": true,
-        "saveScreenshots": false,
-        "startUrls": [
-            {
-                "url": "https://vkvideo.ru/trends",
-                "method": "GET"
-            }
-        ],
-        "useSitemaps": false,
-        "includeUrlGlobs": [],
-        "excludeUrlGlobs": [],
-        "initialConcurrency": 0,
-        "maxConcurrency": 200,
-        "maxSessionRotations": 10,
-        "maxRequestRetries": 5,
-        "requestTimeoutSecs": 60,
-        "minFileDownloadSpeedKBps": 128,
-        "dynamicContentWaitSecs": 10,
-        "waitForSelector": "",
-        "softWaitForSelector": "",
-        "maxScrollHeightPixels": 5000,
-        "keepElementsCssSelector": "",
-        "htmlTransformer": "readableText",
-        "maxResults": 9999999
+    "readableTextCharThreshold": 100,
+    "removeCookieWarnings": true,
+    "renderingTypeDetectionPercentage": 10,
+    "respectRobotsTxtFile": true,
+    "saveFiles": false,
+    "saveHtml": true,
+    "saveHtmlAsFile": false,
+    "saveMarkdown": false,
+    "saveScreenshots": false,
+    "startUrls": [
+        {
+            "url": "https://vkvideo.ru/trends",
+            "method": "GET"
+        }
+    ],
+    "useSitemaps": false
     }
 }
 
