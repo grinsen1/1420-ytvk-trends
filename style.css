@@ -1041,40 +1041,6 @@ pre code {
   cursor: not-allowed;
 }
 
-/* VK Bypass specific button styles */
-.btn--bypass {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
-  color: var(--color-btn-primary-text);
-  border: none;
-  padding: var(--space-10) var(--space-16);
-  font-weight: var(--font-weight-medium);
-  box-shadow: var(--shadow-sm);
-  transition: all var(--duration-normal) var(--ease-standard);
-}
-
-.btn--bypass:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.btn--bypass:active {
-  transform: translateY(0);
-}
-
-.btn--bypass .btn-icon {
-  margin-right: var(--space-8);
-  font-size: var(--font-size-lg);
-}
-
-.btn--info {
-  background: var(--color-info);
-  color: var(--color-btn-primary-text);
-}
-
-.btn--info:hover {
-  background: rgba(var(--color-info-rgb), 0.9);
-}
-
 /* Form elements */
 .form-control {
   display: block;
@@ -1343,7 +1309,7 @@ select.form-control {
     format('woff2');
 }
 
-/* Custom styles for the multi-platform dashboard */
+/* Additional custom styles for the multi-platform dashboard */
 
 /* Tabs */
 .tabs {
@@ -1450,255 +1416,47 @@ select.form-control {
   color: var(--color-text-secondary);
 }
 
-/* VK Video Bypass Styles */
-.vk-heading {
-  color: var(--color-primary);
-  font-size: var(--font-size-2xl);
-  margin-bottom: var(--space-16);
-  text-align: center;
-}
-
-.vk-info-banner {
-  background: linear-gradient(135deg, rgba(var(--color-warning-rgb), 0.1), rgba(var(--color-error-rgb), 0.1));
-  border: 2px solid rgba(var(--color-warning-rgb), 0.3);
-  border-radius: var(--radius-lg);
-  padding: var(--space-16);
-  margin-bottom: var(--space-24);
-}
-
-.vk-info-banner p {
-  margin: 0;
-  color: var(--color-text);
-  font-weight: var(--font-weight-medium);
-}
-
-.vk-info-banner p:first-child {
-  font-size: var(--font-size-lg);
-  margin-bottom: var(--space-8);
-}
-
-/* Bypass Methods */
-.bypass-methods {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-20);
-  margin-bottom: var(--space-24);
-}
-
-.method-group {
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-16);
-  transition: all var(--duration-normal) var(--ease-standard);
-}
-
-.method-group:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-primary);
-}
-
-.method-group h4 {
-  color: var(--color-primary);
-  font-size: var(--font-size-lg);
-  margin-bottom: var(--space-12);
-  font-weight: var(--font-weight-semibold);
-}
-
-.method-controls {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-12);
-}
-
-.proxy-selector {
-  margin-bottom: var(--space-8);
-}
-
-.method-status {
-  min-height: 24px;
-  display: flex;
-  align-items: center;
-  font-size: var(--font-size-sm);
-  padding: var(--space-4);
-}
-
-.method-status.loading {
-  color: var(--color-info);
-}
-
-.method-status.loading::before {
-  content: "⟳ ";
-  animation: spin 1s linear infinite;
-  margin-right: var(--space-4);
-}
-
-.method-status.success {
-  color: var(--color-success);
-}
-
-.method-status.success::before {
-  content: "✓ ";
-  margin-right: var(--space-4);
-}
-
-.method-status.error {
-  color: var(--color-error);
-}
-
-.method-status.error::before {
-  content: "✗ ";
-  margin-right: var(--space-4);
-}
-
-/* VK Loading */
-.vk-loading-container {
-  background: var(--color-secondary);
-  padding: var(--space-16);
-  border-radius: var(--radius-base);
-  border: 1px solid var(--color-border);
-}
-
-/* X-Frame-Bypass Container */
-.xframe-container {
-  background: var(--color-surface);
-  padding: var(--space-16);
-  border-radius: var(--radius-lg);
-  border: 2px solid var(--color-primary);
-  box-shadow: var(--shadow-lg);
-}
-
-x-frame-bypass {
-  display: block;
-  width: 100%;
-  height: 60vh;
-  border-radius: var(--radius-base);
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-}
-
-/* Bypass Results */
-.bypass-results {
-  background: var(--color-success);
-  background: rgba(var(--color-success-rgb), 0.1);
-  border: 1px solid rgba(var(--color-success-rgb), 0.3);
-  border-radius: var(--radius-lg);
-  padding: var(--space-16);
-}
-
-.bypass-results h5 {
-  color: var(--color-success);
-  margin-bottom: var(--space-12);
-}
-
-.results-summary {
+/* Form Help Text */
+.form-help-text {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
+  margin-top: var(--space-4);
 }
 
-/* Modal Styles */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-}
-
-.modal.hidden {
-  display: none;
-}
-
-.modal-content {
+/* VK iframe styles */
+.vk-iframe-container {
   background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow: hidden;
-  animation: modalSlideIn var(--duration-normal) var(--ease-standard);
-}
-
-@keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: var(--space-16);
-  border-bottom: 1px solid var(--color-border);
 }
 
-.modal-header h4 {
-  color: var(--color-primary);
-  margin: 0;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: var(--font-size-2xl);
-  cursor: pointer;
-  color: var(--color-text-secondary);
-  padding: var(--space-4);
-  border-radius: var(--radius-sm);
-  transition: all var(--duration-fast) var(--ease-standard);
-}
-
-.modal-close:hover {
-  background: var(--color-secondary);
-  color: var(--color-text);
-}
-
-.modal-body {
-  padding: var(--space-16);
-  overflow-y: auto;
-  max-height: 60vh;
-}
-
-.modal-body h5 {
-  color: var(--color-primary);
-  margin-bottom: var(--space-8);
-}
-
-.modal-body ol,
-.modal-body ul {
-  padding-left: var(--space-20);
-}
-
-.modal-body li {
-  margin-bottom: var(--space-8);
-}
-
-.modal-body code {
-  background: var(--color-secondary);
-  padding: var(--space-2) var(--space-6);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-}
-
-.modal-body pre {
+.iframe-info {
   background: var(--color-secondary);
   padding: var(--space-12);
   border-radius: var(--radius-base);
-  overflow-x: auto;
-  margin: var(--space-12) 0;
+  border: 1px solid var(--color-border);
+}
+
+#vk-trends-iframe {
+  width: 100%;
+  height: 80vh;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-surface);
+}
+
+.iframe-controls {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+}
+
+.iframe-status {
+  background: var(--color-background);
+  padding: var(--space-8);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
 }
 
 /* Videos Grid */
@@ -1933,26 +1691,6 @@ x-frame-bypass {
   color: var(--color-text);
 }
 
-/* Text utilities */
-.text-center {
-  text-align: center;
-}
-
-/* Custom checkbox styling */
-input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  cursor: pointer;
-}
-
-input[type="checkbox"]:checked {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
   .tabs {
@@ -1979,13 +1717,9 @@ input[type="checkbox"]:checked {
   .config-group .flex {
     gap: var(--space-8);
   }
-
-  .method-controls {
-    flex-direction: column;
-  }
-
-  .bypass-methods {
-    grid-template-columns: 1fr;
+  
+  #vk-trends-iframe {
+    height: 60vh;
   }
 }
 
@@ -2003,17 +1737,28 @@ input[type="checkbox"]:checked {
     flex-direction: column;
     gap: var(--space-4);
   }
-
-  .modal-content {
-    width: 95%;
-    margin: var(--space-16);
+  
+  #vk-trends-iframe {
+    height: 50vh;
   }
+}
 
-  .vk-heading {
-    font-size: var(--font-size-xl);
-  }
+/* Text utilities */
+.text-center {
+  text-align: center;
+}
 
-  .method-group {
-    padding: var(--space-12);
-  }
+/* Custom checkbox styling */
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+input[type="checkbox"]:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
