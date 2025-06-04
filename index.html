@@ -179,10 +179,19 @@
             </div>
             
             <button class="btn btn--primary" id="load-vk-data">Загрузить данные VK Video</button>
-            
-            <div class="api-check-block mt-8 hidden" id="vk-api-check">
-                <div class="loading-indicator">Запуск Apify Website Content Crawler...</div>
-            </div>
+            <div class="error-container mt-8" id="vk-error-container"></div>
+           <div class="api-check-block mt-8 hidden" id="vk-api-check">
+    <div class="loading-indicator">Запуск Apify Website Content Crawler...</div>
+    <div class="apify-progress mt-8" id="apify-progress">
+        <div class="progress-text">Ожидание запуска...</div>
+    </div>
+</div>
+
+<!-- ДОБАВИТЬ блок для отладочной информации -->
+<div class="debug-info mt-8 hidden" id="vk-debug-info">
+    <h4>Отладочная информация:</h4>
+    <pre id="debug-output"></pre>
+</div>
             
             <div class="required-fields-info mt-8">
                 <h4>Необходимые поля для VK Video:</h4>
