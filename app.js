@@ -512,9 +512,13 @@ const fetchVkVideos = async () => {
             })
         });
         
-        if (!runResponse.ok) {
-            throw new Error(`Apify API Error: ${runResponse.status}`);
-        }
+       
+     if (!runResponse.ok) {
+    const errorData = await runResponse.json();
+    throw new Error(`Apify API Error ${runResponse.status}: ${errorData.error?.message || 'Unknown error'}`);
+}
+            
+        
         
         const runData = await runResponse.json();
         const runId = runData.data.id;
@@ -638,7 +642,28 @@ const parseVkVideosFromCrawlResults = (crawlResults) => {
     return videos.slice(0, 20); // Ограничиваем до 20 видео
 };
 
-
+const waitForApifyCompletion = async (runId, token) => {
+    const maxWaitTime = 120000; // 2 минуты
+    const checkInterval = 3000; // 3 секунды
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < maxWaitTime) {
+        const statusResponse = await fetch(
+            `https://api.apify.com/v2/acts/runs/${runId}?token=${token}`
+        );
+        const statusData = await statusResponse.json();
+        
+        if (statusData.data.status === 'SUCCEEDED') {
+            return;
+        } else if (statusData.data.status === 'FAILED') {
+            throw new Error('Apify Actor run failed');
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, checkInterval));
+    }
+    
+    throw new Error('Apify Actor run timeout');
+};
 
 
 // Render Functions
@@ -958,6 +983,12 @@ const initElements = () => {
         apifyToken: document.getElementById('apify-token'),
         apifyStatus: document.getElementById('apify-status'),
         loadVkBtn: document.getElementById('load-vk-data'),
+        vkVideosGrid: document.getElementById('vk-videos'),
+        vkMassAnalysis: document.getElementById('vk-mass-analysis'), 
+        vkMassAnalyzeBtn: document.getElementById('vk-mass-analyze'),
+        vkApiCheck: document.getElementById('vk-api-check'),
+        vkMaxResults: document.getElementById('vk-max-results'),
+        vkTargetUrl: document.getElementById('vk-target-url'),
         
         // Export buttons
         exportCsvBtn: document.getElementById('export-csv'),
