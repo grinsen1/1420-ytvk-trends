@@ -920,7 +920,7 @@ const fetchVkVideos = async () => {
         updateApiStatus('vk', 'loading');
         const loadingIndicator = showLoading(elements.vkVideosGrid, 'Запуск Apify Website Content Crawler...');
         
-        // Запуск Website Content Crawler
+        // Запуск Actor
         const runResponse = await fetch(`${CONFIG.platforms.vk.apiEndpoint}/${CONFIG.platforms.vk.apifyActor}/runs?token=${apifyToken}`, {
             method: 'POST',
             headers: {
@@ -929,27 +929,42 @@ const fetchVkVideos = async () => {
             body: JSON.stringify(CONFIG.platforms.vk.runInput)
         });
         
-       
-     if (!runResponse.ok) {
-    const errorData = await runResponse.json();
-    throw new Error(`Apify API Error ${runResponse.status}: ${errorData.error?.message || 'Unknown error'}`);
-}
-            
-        
+        if (!runResponse.ok) {
+            const errorText = await runResponse.text();
+            throw new Error(`Apify API Error ${runResponse.status}: ${errorText}`);
+        }
         
         const runData = await runResponse.json();
+        
+        // ДОБАВИТЬ проверку структуры ответа
+        if (!runData || !runData.data) {
+            throw new Error('Неверный формат ответа от Apify API при создании run');
+        }
+        
         const runId = runData.data.id;
         
-        // Ожидание завершения
-        await waitForApifyCompletion(runId, apifyToken);
+        if (!runId) {
+            throw new Error('Не получен ID run от Apify API');
+        }
+        
+        console.log(`Apify run started with ID: ${runId}`);
+        
+        // Ожидание завершения с улучшенной обработкой ошибок
+        const completedRun = await waitForApifyCompletion(runId, apifyToken);
         
         // Получение результатов
         const resultsResponse = await fetch(
-            `${CONFIG.platforms.vk.apiEndpoint}/${CONFIG.platforms.vk.apifyActor}/runs/${runId}/dataset/items?token=${apifyToken}`
+            `https://api.apify.com/v2/acts/apify~website-content-crawler/runs/${runId}/dataset/items?token=${apifyToken}&format=json&clean=true`
         );
-        const crawlResults = await resultsResponse.json();
         
-        // Парсинг видео из HTML контента
+        if (!resultsResponse.ok) {
+            throw new Error(`Failed to get results: ${resultsResponse.status} ${resultsResponse.statusText}`);
+        }
+        
+        const crawlResults = await resultsResponse.json();
+        console.log(`Получено ${crawlResults.length} результатов от Apify`);
+        
+        // Парсинг видео из результатов
         const videos = parseVkVideosFromCrawlResults(crawlResults);
         
         if (loadingIndicator && loadingIndicator.parentNode) {
@@ -967,10 +982,16 @@ const fetchVkVideos = async () => {
         
     } catch (error) {
         console.error('Error fetching VK videos:', error);
+        
+        if (loadingIndicator && loadingIndicator.parentNode) {
+            loadingIndicator.remove();
+        }
+        
         showError(elements.vkVideosGrid, `Ошибка при загрузке видео: ${error.message}`);
         updateApiStatus('vk', 'error');
     }
 };
+
 
 const parseVkVideosFromCrawlResults = (crawlResults) => {
     const videos = [];
@@ -1060,27 +1081,72 @@ const parseVkVideosFromCrawlResults = (crawlResults) => {
 };
 
 const waitForApifyCompletion = async (runId, token) => {
-    const maxWaitTime = 120000; // 2 минуты
-    const checkInterval = 3000; // 3 секунды
+    const maxWaitTime = 300000; // 5 минут
+    const checkInterval = 10000; // 10 секунд
     const startTime = Date.now();
     
+    console.log('Starting wait for completion, runId:', runId, 'token length:', token ? token.length : 'no token');
+    
     while (Date.now() - startTime < maxWaitTime) {
-        const statusResponse = await fetch(
-            `https://api.apify.com/v2/acts/runs/${runId}?token=${token}`
-        );
-        const statusData = await statusResponse.json();
-        
-        if (statusData.data.status === 'SUCCEEDED') {
-            return;
-        } else if (statusData.data.status === 'FAILED') {
-            throw new Error('Apify Actor run failed');
+        try {
+            const statusResponse = await fetch(
+                `https://api.apify.com/v2/acts/runs/${runId}?token=${token}`
+            );
+            
+            if (!statusResponse.ok) {
+                throw new Error(`Status check failed: ${statusResponse.status} ${statusResponse.statusText}`);
+            }
+            
+            const statusData = await statusResponse.json();
+            
+            // ИСПРАВЛЕНИЕ: Проверяем наличие поля data
+            if (!statusData) {
+                console.warn('Получен пустой ответ от Apify API');
+                await new Promise(resolve => setTimeout(resolve, checkInterval));
+                continue;
+            }
+            
+            if (!statusData.data) {
+                console.warn('Отсутствует поле data в ответе Apify API:', statusData);
+                await new Promise(resolve => setTimeout(resolve, checkInterval));
+                continue;
+            }
+            
+            const status = statusData.data.status;
+            console.log(`Run status: ${status}`);
+            
+            if (status === 'SUCCEEDED') {
+                console.log('Apify run completed successfully');
+                return statusData.data;
+            } else if (status === 'FAILED' || status === 'ABORTED' || status === 'TIMED-OUT') {
+                const errorMessage = statusData.data.statusMessage || `Run ${status.toLowerCase()}`;
+                throw new Error(`Apify run ${status.toLowerCase()}: ${errorMessage}`);
+            }
+            
+            // Показываем прогресс если доступен
+            if (statusData.data.stats) {
+                const stats = statusData.data.stats;
+                console.log(`Progress: ${stats.itemsCount || 0} items, ${stats.requestsFinished || 0} requests finished`);
+            }
+            
+        } catch (error) {
+            console.error('Error checking run status:', error);
+            
+            // Если это сетевая ошибка, продолжаем попытки
+            if (error.name === 'TypeError' || error.message.includes('fetch')) {
+                console.log('Network error, retrying...');
+            } else {
+                // Для других ошибок прерываем
+                throw error;
+            }
         }
         
         await new Promise(resolve => setTimeout(resolve, checkInterval));
     }
     
-    throw new Error('Apify Actor run timeout');
+    throw new Error('Apify run timeout - превышено время ожидания 5 минут');
 };
+
 
 
 // Render Functions
