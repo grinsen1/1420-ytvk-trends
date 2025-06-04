@@ -21,7 +21,7 @@ const CONFIG = {
         },
         vk: {
             name: "VK Video",
-            proxyUrl: "https://wikipedia.org"
+            proxyUrl: "https://cdn.youtubeunblocked.live/"
         }
     },
     openrouter: {
