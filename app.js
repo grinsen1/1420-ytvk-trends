@@ -795,17 +795,37 @@ const fetchYoutubeVideos = async () => {
     try {
         const apiKey = elements.youtubeKey?.value;
         
+        if (!apiKey) {
+            showError(elements.youtubeVideosGrid, 'Необходим YouTube API ключ для загрузки видео');
+            updateApiStatus('youtube', 'error');
+            return;
+        }
+        
         updateApiStatus('youtube', 'loading');
         if (elements.youtubeApiCheck) {
             elements.youtubeApiCheck.classList.remove('hidden');
         }
         const loadingIndicator = showLoading(elements.youtubeApiCheck || elements.youtubeVideosGrid, 'Загрузка YouTube видео...');
         
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Реальный запрос к YouTube Data API v3
+        const regionCode = 'RU';
+        const maxResults = 20;
+        const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=${regionCode}&maxResults=${maxResults}&key=${apiKey}`;
         
-        // For demo purposes, use mock data instead of real API
-        const mockData = generateMockYouTubeData();
+        console.log('🔄 Fetching YouTube videos from API...');
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            if (response.status === 403) {
+                throw new Error('Проверьте YouTube API ключ и квоты');
+            } else if (response.status === 400) {
+                throw new Error('Неверные параметры запроса к YouTube API');
+            }
+            throw new Error(`YouTube API error: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log(`✅ Получено ${data.items?.length || 0} видео от YouTube API`);
         
         if (loadingIndicator && loadingIndicator.parentNode) {
             loadingIndicator.remove();
@@ -816,10 +836,10 @@ const fetchYoutubeVideos = async () => {
         }
         
         updateApiStatus('youtube', 'success');
-        state.videos.youtube = mockData;
+        state.videos.youtube = data.items || [];
         
         // Render videos
-        renderVideos('youtube', mockData);
+        renderVideos('youtube', data.items || []);
         
         // Show mass analysis option
         if (elements.youtubeMassAnalysis) {
@@ -828,10 +848,20 @@ const fetchYoutubeVideos = async () => {
         
     } catch (error) {
         console.error('Error fetching YouTube videos:', error);
+        
+        if (loadingIndicator && loadingIndicator.parentNode) {
+            loadingIndicator.remove();
+        }
+        
+        if (elements.youtubeApiCheck) {
+            elements.youtubeApiCheck.classList.add('hidden');
+        }
+        
         showError(elements.youtubeVideosGrid, `Ошибка при загрузке видео: ${error.message}`);
         updateApiStatus('youtube', 'error');
     }
 };
+
 
 const fetchTiktokVideos = async () => {
     try {
