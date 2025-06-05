@@ -1412,11 +1412,49 @@ if (result.choices) {
 }
 
         const aiResponse = result.choices[0].message.content;
+
+const analysisContainer = document.getElementById(`analysis-${videoData.id}`);
+console.log('📋 Analysis container found:', !!analysisContainer);
+
+if (!analysisContainer) {
+    console.log('❌ Analysis container not found, creating...');
+    // Создаем контейнер если не найден
+    const videoCard = document.querySelector(`.video-card[data-video-id="${videoData.id}"]`);
+    if (videoCard) {
+        const newContainer = document.createElement('div');
+        newContainer.id = `analysis-${videoData.id}`;
+        newContainer.className = 'analysis-container hidden';
+        videoCard.appendChild(newContainer);
+        analysisContainer = newContainer;
+    }
+}
+
+
+
         
         // Извлекаем процент
         const scoreMatch = aiResponse.match(/(\d+)%?/);
         aiScore = scoreMatch ? parseInt(scoreMatch[1]) : 75;
-        
+        const insights = aiResponse.split('\n')
+    .filter(line => line.trim() && !line.includes('%') && line.length > 10)
+    .slice(0, 4);
+
+console.log('💡 Extracted insights:', insights);
+
+// Заполняем контейнер с insights
+if (analysisContainer) {
+    analysisContainer.innerHTML = `
+        <h5>AI Анализ (${aiScore}%):</h5>
+        <ul>
+            ${insights.map(insight => `<li>${insight.replace(/^[-•*]\s*/, '')}</li>`).join('')}
+        </ul>
+    `;
+    analysisContainer.classList.remove('hidden');
+    console.log('✅ Analysis container updated with insights');
+} else {
+    console.log('❌ Analysis container still not found');
+}
+
         // Обновляем UI
         const aiScoreElement = document.querySelector(`.video-card[data-video-id="${videoData.id}"] .ai-score`);
         console.log('🎯 AI Score Element found:', !!aiScoreElement);
