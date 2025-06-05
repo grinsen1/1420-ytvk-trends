@@ -937,7 +937,7 @@ const fetchVkVideos = async () => {
         }
         
         updateApiStatus('vk', 'loading');
-        loadingIndicator = showLoading(elements.vkVideosGrid, 'Запуск Apify Website Content Crawler...');
+        loadingIndicator = showLoading(elements.vkVideosGrid, 'Загружаем страницу VKVideo Trends...');
         
         console.log('🚀 Starting Apify Actor run...');
         
