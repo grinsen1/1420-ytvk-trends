@@ -1,4 +1,4 @@
-a// App Configuration
+// App Configuration
 const CONFIG = {
     platforms: {
         youtube: {
