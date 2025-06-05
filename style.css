@@ -1754,3 +1754,13 @@ input[type="checkbox"]:checked {
       color: #00aeef !important;
  font-size: 50px;
 }
+/* Принудительное применение шрифта */
+*, 
+*::before, 
+*::after,
+button, 
+input, 
+textarea, 
+select {
+    font-family: var(--font-family-base) !important;
+}
