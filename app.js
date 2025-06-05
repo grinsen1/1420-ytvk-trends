@@ -445,7 +445,7 @@ const CONFIG = {
 
     },
     openrouter: {
-        apiKey: "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",
+        apiKey: "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",
         defaultModel: "deepseek/deepseek-r1-0528:free",
         endpoint: "https://openrouter.ai/api/v1/chat/completions"
     },
@@ -696,7 +696,7 @@ const createVideoCard = (videoData, platform) => {
     const youthAppealScore = Math.floor(60 + (hash % 41)); // 60-100 range
     
     card.innerHTML = `
-        <img src="${thumbnail}" alt="${title}" class="video-thumbnail" onerror="this.src='https://placehold.co/320x180/00AEEF/FFFFFF?text=?text=Video'">
+        <img src="${thumbnail}" alt="${title}" class="video-thumbnail" onerror="this.src='https://placehold.co/320x180/00AEEF/FFFFFF?text=Video'">
         <div class="video-content">
             <a href="${videoUrl}" target="_blank" class="video-title">${title}</a>
             <div class="video-meta">
@@ -1446,8 +1446,17 @@ if (result.choices) {
 }
 
         const aiResponse = result.choices[0].message.content;
+        const formatAiResponse = (text) => {
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // **текст** → <strong>текст</strong>
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')              // *текст* → <em>текст</em>
+        .replace(/\n/g, '<br>');                           // переносы строк → <br>
+};
+
+const formattedResponse = formatAiResponse(aiResponse);
+        
         // Заполнить контейнер
-document.getElementById(`analysis-${videoData.id}`).innerHTML = `<h5>AI: ${aiScore}%</h5><p>${aiResponse}</p>`;
+document.getElementById(`analysis-${videoData.id}`).innerHTML = `<h5>AI: ${aiScore}%</h5><p>${formattedResponse}</p>`;
 
 // Показать
 document.getElementById(`analysis-${videoData.id}`).classList.remove('hidden');
