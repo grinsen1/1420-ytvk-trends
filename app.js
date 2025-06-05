@@ -1483,7 +1483,7 @@ if (!analysisContainer) {
         // Извлекаем процент
         const scoreMatch = aiResponse.match(/(\d+)%?/);
         aiScore = scoreMatch ? parseInt(scoreMatch[1]) : 75;
-        const insights = formattedResponse.split('\n')
+        const insights = aiResponse.split('\n')
     .filter(line => line.trim() && !line.includes('%') && line.length > 10)
     .slice(0, 4);
 
@@ -1492,7 +1492,7 @@ console.log('💡 Extracted insights:', insights);
 // Заполняем контейнер с insights
 if (analysisContainer) {
     analysisContainer.innerHTML = `
-        <h5>AI Анализ (${aiScore}%):</h5>
+        <h5>Актуальность видео для 14-20: (${aiScore}%):</h5>
         <ul>
             ${insights.map(insight => `<li>${insight.replace(/^[-•*]\s*/, '')}</li>`).join('')}
         </ul>
