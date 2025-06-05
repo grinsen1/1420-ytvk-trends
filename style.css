@@ -1750,3 +1750,7 @@ input[type="checkbox"]:checked {
     margin: 0;
     padding-left: 20px;
 }
+.y-highlight {
+      color: #00aeef !important;
+ font-size: 50px;
+}
