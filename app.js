@@ -661,7 +661,7 @@ const createVideoCard = (videoData, platform) => {
             title = videoData.snippet?.title || 'YouTube Video';
             author = videoData.snippet?.channelTitle || 'YouTube Channel';
             publishedAt = videoData.snippet?.publishedAt ? formatDate(videoData.snippet.publishedAt) : 'Недавно';
-            thumbnail = videoData.snippet?.thumbnails?.medium?.url || 'https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=YouTube';
+            thumbnail = videoData.snippet?.thumbnails?.medium?.url || 'https://placehold.co/320x180/00AEEF/FFFFFF?text=YouTube';
             views = formatNumber(videoData.statistics?.viewCount || 0);
             likes = formatNumber(videoData.statistics?.likeCount || 0);
             comments = formatNumber(videoData.statistics?.commentCount || 0);
@@ -672,7 +672,7 @@ const createVideoCard = (videoData, platform) => {
             title = videoData.title || 'TikTok Video';
             author = videoData.author || 'TikTok Creator';
             publishedAt = videoData.publishedAt ? formatDate(videoData.publishedAt) : 'Недавно';
-            thumbnail = videoData.thumbnail || 'https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=TikTok';
+            thumbnail = videoData.thumbnail || 'https://placehold.co/320x180/00AEEF/FFFFFF?text=TikTok';
             views = formatNumber(videoData.views || 0);
             likes = formatNumber(videoData.likes || 0);
             comments = formatNumber(videoData.comments || 0);
@@ -683,7 +683,7 @@ const createVideoCard = (videoData, platform) => {
              title = videoData.title || 'VK Video';
              author = videoData.author || 'VK ';
              publishedAt = videoData.uploadDate || 'Недавно';
-             thumbnail = videoData.image || 'https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=VK';
+             thumbnail = videoData.image || 'https://placehold.co/320x180/00AEEF/FFFFFF?text=VK';
              views = formatNumber(videoData.views || 0);
              likes = formatNumber(videoData.likes || 0);
              comments = formatNumber(videoData.comments || 0);
@@ -696,7 +696,7 @@ const createVideoCard = (videoData, platform) => {
     const youthAppealScore = Math.floor(60 + (hash % 41)); // 60-100 range
     
     card.innerHTML = `
-        <img src="${thumbnail}" alt="${title}" class="video-thumbnail" onerror="this.src='https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=Video'">
+        <img src="${thumbnail}" alt="${title}" class="video-thumbnail" onerror="this.src='https://placehold.co/320x180/00AEEF/FFFFFF?text=?text=Video'">
         <div class="video-content">
             <a href="${videoUrl}" target="_blank" class="video-title">${title}</a>
             <div class="video-meta">
@@ -774,7 +774,7 @@ const generateMockYouTubeData = () => {
                 publishedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
                 thumbnails: {
                     medium: {
-                        url: `https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=YouTube+${i + 1}`
+                        url: `https://placehold.co/320x180/00AEEF/FFFFFF?text=YouTube+${i + 1}`
                     }
                 },
                 description: `Описание видео ${i + 1}`
@@ -892,7 +892,7 @@ const fetchTiktokVideos = async () => {
                 title: `Трендовое TikTok видео #${i}`,
                 author: `TikTok Creator ${i}`,
                 publishedAt: new Date(Date.now() - Math.random() * 604800000).toISOString(),
-                thumbnail: `https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=TikTok+${i}`,
+                thumbnail: `https://placehold.co/320x180/00AEEF/FFFFFF?text=?text=TikTok+${i}`,
                 views: Math.floor(Math.random() * 1000000) + 50000,
                 likes: Math.floor(Math.random() * 100000) + 5000,
                 comments: Math.floor(Math.random() * 10000) + 100,
@@ -1150,7 +1150,7 @@ const parseVkVideosFromCrawlResults = (crawlResults) => {
             // Извлекаем тамбнейл
             const imgElement = videoElement.querySelector('.VideoCard__thumbImg');
             const thumbnail = imgElement ? imgElement.src : 
-                `https://via.placeholder.com/320x180/00AEEF/FFFFFF?text=VK+${index + 1}`;
+                `https://placehold.co/320x180/00AEEF/FFFFFF?text=VK+${index + 1}`;
             
             // Извлекаем URL видео
             const linkElement = videoElement.querySelector('.VideoCard__title');
