@@ -1485,7 +1485,6 @@ if (!analysisContainer) {
         aiScore = scoreMatch ? parseInt(scoreMatch[1]) : 75;
         const insights = aiResponse.split('\n')
     .filter(line => line.trim() && !line.includes('%') && line.length > 10)
-    .slice(0, 4);
 
 console.log('💡 Extracted insights:', insights);
 
