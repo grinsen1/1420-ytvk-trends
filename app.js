@@ -1,4 +1,4 @@
-// App Configuration
+a// App Configuration
 const CONFIG = {
     platforms: {
         youtube: {
@@ -1412,6 +1412,11 @@ if (result.choices) {
 }
 
         const aiResponse = result.choices[0].message.content;
+        // Заполнить контейнер
+document.getElementById(`analysis-${videoData.id}`).innerHTML = `<h5>AI: ${aiScore}%</h5><p>${aiResponse}</p>`;
+
+// Показать
+document.getElementById(`analysis-${videoData.id}`).classList.remove('hidden');
 
 const analysisContainer = document.getElementById(`analysis-${videoData.id}`);
 console.log('📋 Analysis container found:', !!analysisContainer);
