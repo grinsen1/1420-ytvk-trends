@@ -1962,3 +1962,25 @@ input[type="checkbox"]:checked {
 .error-container {
     min-height: 0;
 }
+
+.analysis-container {
+    background: #f8f9fa;
+    padding: 16px;
+    margin-top: 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.analysis-container.hidden {
+    display: none;
+}
+
+.analysis-container h5 {
+    margin: 0 0 8px 0;
+    color: #00AEEF;
+}
+
+.analysis-container ul {
+    margin: 0;
+    padding-left: 20px;
+}
