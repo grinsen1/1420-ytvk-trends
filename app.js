@@ -1407,7 +1407,7 @@ const analyzeVideo = async (videoData, platform) => {
                 'X-Title': 'YOTA Trends Dashboard',
             },
             body: JSON.stringify({
-                model: elements.openrouterModel?.value || 'deepseek/deepseek-r1-0528:free',
+                model: elements.openrouterModel?.value || 'google/gemini-3.1-pro-preview',
                 messages: [{ role: 'user', content: basePrompt }],
                 temperature: 0.7,
             }),
