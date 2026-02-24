@@ -445,7 +445,7 @@ const CONFIG = {
 
     },
     openrouter: {
-        apiKey: "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",
+        apiKey: "",
         defaultModel: "google/gemini-3.1-pro-preview",
         endpoint: "https://openrouter.ai/api/v1/chat/completions"
     },
