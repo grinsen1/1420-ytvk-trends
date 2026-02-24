@@ -1359,227 +1359,239 @@ const prepareVkVideoForAI = (video) => {
 URL: ${video.url}`;
 };
 // AI Analysis
+// Одиночный AI‑анализ одного видео через OpenRouter
 const analyzeVideo = async (videoData, platform) => {
     try {
         const openrouterKey = elements.openrouterKey?.value;
-        
+
         if (!openrouterKey) {
-            showError(document.querySelector(`#${platform}-videos`), 'Необходим ключ OpenRouter для AI-анализа');
+            showError(
+                document.querySelector(`#${platform}-platform`),
+                'Не задан OpenRouter API‑ключ'
+            );
             return;
         }
-          let aiScore = 0;
-        // ДОБАВИТЬ специальную обработку для VK
-  let promptData;
-let basePrompt;
 
-if (platform === 'vk') {
-    promptData = prepareVkVideoForAI(videoData);
-    basePrompt = `Проанализируй привлекательность этого VK видео для российской молодежи 14-20 лет:
+        // Формируем промпт
+        let basePrompt = '';
+        if (platform === 'vk') {
+            const promptData = prepareVkVideoForAI(videoData); // уже есть в коде
+            basePrompt =
+                `Ты — эксперт по молодежным трендам в Рунете. ` +
+                `Проанализируй следующее видео VK для аудитории 14–20 лет:\n\n` +
+                `${promptData}\n\n` +
+                `1) Дай общую оценку актуальности для 14–20 лет в формате "Оценка: NN%".\n` +
+                `2) Затем перечисли 3–5 кратких инсайтов, каждый с новой строки. ` +
+                `Не используй маркеры "-", только текст строки.\n` +
+                `3) В тексте может быть *курсив* и **жирный** — используй их при необходимости.`;
+        } else {
+            const promptData = JSON.stringify(videoData);
+            basePrompt =
+                `Ты — эксперт по молодежным трендам в Рунете. ` +
+                `Проанализируй следующее видео (${platform}) для аудитории 14–20 лет:\n\n` +
+                `${promptData}\n\n` +
+                `1) Дай общую оценку актуальности для 14–20 лет в формате "Оценка: NN%".\n` +
+                `2) Затем перечисли 3–5 кратких инсайтов, каждый с новой строки. ` +
+                `Не используй маркеры "-", только текст строки.\n` +
+                `3) В тексте может быть *курсив* и **жирный** — используй их при необходимости.`;
+        }
 
-${promptData}
+        console.log('🧠 Prepared prompt length:', basePrompt.length);
 
-Имей в виду эти критерии, но не ограничивайся ими, используй собственные знания о российской аудитории 14-20 лет.
-
-ВЕРНИ число (процент от 0 до 100) и 3-4 тезиса почему именно такая оценка для аудитории 14-20 лет. Сразу начинай с тезисов, без вступлений и итогов.`;
-} else {
-    // Для YouTube и TikTok используем стандартную обработку
-    promptData = JSON.stringify(videoData);
-    basePrompt = `Проанализируй привлекательность этого VK видео для российской молодежи 14-20 лет:
-
-${promptData}
-
-Имей в виду эти критерии, но не ограничивайся ими, используй собственные знания о российской аудитории 14-20 лет.
-
-ВЕРНИ число (процент от 0 до 100) и 3-4 тезиса почему именно такая оценка для аудитории 14-20 лет. Сразу начинай с тезисов, без вступлений и итогов.`;
-}
-
-console.log('📝 Prepared prompt length:', basePrompt.length);
-const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${openrouterKey}`,
-                'Content-Type': 'application/json'
+                Authorization: `Bearer ${openrouterKey}`,
+                'Content-Type': 'application/json',
+                'HTTP-Referer': window.location.href,
+                'X-Title': 'YOTA Trends Dashboard',
             },
             body: JSON.stringify({
                 model: elements.openrouterModel?.value || 'deepseek/deepseek-r1-0528:free',
                 messages: [{ role: 'user', content: basePrompt }],
-                temperature: 0.7
-            })
+                temperature: 0.7,
+            }),
         });
-        console.log('📡 Response status:', response.status);
-console.log('📡 Response ok:', response.ok);
 
-const result = await response.json();
-console.log('📄 Full API response:', result);
-if (result.choices) {
-    console.log('✅ Choices found:', result.choices.length);
-    console.log('📝 First choice:', result.choices[0]);
-} else {
-    console.log('❌ No choices in response');
-    if (result.error) {
-        console.log('❌ API Error:', result.error);
-    }
-}
+        console.log('🔗 OpenRouter status:', response.status, 'ok:', response.ok);
+        const result = await response.json();
+        console.log('📦 Full API response:', result);
 
-        const aiResponse = result.choices[0].message.content;
-        const formatAiResponse = (text) => {
-    return text
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // **текст** → <strong>текст</strong>
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')              // *текст* → <em>текст</em>
-        .replace(/\n/g, '<br>');                           // переносы строк → <br>
-};
+        if (!response.ok || !result.choices || !result.choices.length) {
+            const msg = result.error?.message || `OpenRouter вернул статус ${response.status}`;
+            console.error('❌ OpenRouter error:', msg, result);
+            showError(
+                document.querySelector(`#${platform}-platform`),
+                `Ошибка OpenRouter: ${msg}`
+            );
+            return;
+        }
 
-const formattedResponse = formatAiResponse(aiResponse);
-        
-        // Заполнить контейнер
-document.getElementById(`analysis-${videoData.id}`).innerHTML = `<h5>AI: ${aiScore}%</h5><p>${formattedResponse}</p>`;
+        const aiResponse = result.choices[0].message.content || '';
+        console.log('📝 Raw AI response:', aiResponse);
 
-// Показать
-document.getElementById(`analysis-${videoData.id}`).classList.remove('hidden');
-
-const analysisContainer = document.getElementById(`analysis-${videoData.id}`);
-console.log('📋 Analysis container found:', !!analysisContainer);
-
-if (!analysisContainer) {
-    console.log('❌ Analysis container not found, creating...');
-    // Создаем контейнер если не найден
-    const videoCard = document.querySelector(`.video-card[data-video-id="${videoData.id}"]`);
-    if (videoCard) {
-        const newContainer = document.createElement('div');
-        newContainer.id = `analysis-${videoData.id}`;
-        newContainer.className = 'analysis-container hidden';
-        videoCard.appendChild(newContainer);
-        analysisContainer = newContainer;
-    }
-}
-
-
-
-        
         // Извлекаем процент
+        let aiScore = 75;
         const scoreMatch = aiResponse.match(/(\d+)%?/);
         aiScore = scoreMatch ? parseInt(scoreMatch[1]) : 75;
-        const insights = aiResponse.split('\n')
-    .filter(line => line.trim() && !line.includes('%') && line.length > 10)
 
-console.log('💡 Extracted insights:', insights);
+        // Режем на инсайты — убираем строку с процентом и слишком короткие/пустые
+        const insights = aiResponse
+            .split('\n')
+            .filter(line => line.trim() && !line.includes('%') && line.length > 10);
 
-// Заполняем контейнер с insights
-if (analysisContainer) {
-    analysisContainer.innerHTML = `
-        <h5>Актуальность видео для 14-20: (${aiScore}%):</h5>
-        <ul>
-            ${insights.map(insight => `<li>${insight.replace(/\*(.*?)\*/g, '<em>$1</em>').replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</li>`).join('')}
-        </ul>
-    `;
-    analysisContainer.classList.remove('hidden');
-    console.log('✅ Analysis container updated with insights');
-} else {
-    console.log('❌ Analysis container still not found');
-}
+        console.log('💡 Extracted insights:', insights);
 
-        // Обновляем UI
-        const aiScoreElement = document.querySelector(`.video-card[data-video-id="${videoData.id}"] .ai-score`);
+        // Контейнер для анализа
+        let analysisContainer = document.getElementById(`analysis-${videoData.id}`);
+        if (!analysisContainer) {
+            console.log('⚠️ Analysis container not found, creating...');
+            const videoCard = document.querySelector(
+                `.video-card[data-video-id="${videoData.id}"]`
+            );
+            if (videoCard) {
+                const newContainer = document.createElement('div');
+                newContainer.id = `analysis-${videoData.id}`;
+                newContainer.className = 'ai-analysis hidden';
+                videoCard.appendChild(newContainer);
+                analysisContainer = newContainer;
+            }
+        }
+
+        // Заполняем контейнер с insights
+        if (analysisContainer) {
+            analysisContainer.innerHTML = `
+                <h5>Актуальность видео для 14–20: (${aiScore}%):</h5>
+                <ul>
+                    ${insights
+                        .map(insight =>
+                            `<li>${insight
+                                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                                .replace(/\n/g, '<br>')
+                                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
+                             </li>`
+                        )
+                        .join('')}
+                </ul>
+            `;
+            analysisContainer.classList.remove('hidden');
+            console.log('✅ Analysis container updated with insights');
+        } else {
+            console.log('❌ Analysis container still not found');
+        }
+
+        // Обновляем UI — поле AI‑оценки в карточке
+        const aiScoreElement = document.querySelector(
+            `.video-card[data-video-id="${videoData.id}"] .ai-score`
+        );
         console.log('🎯 AI Score Element found:', !!aiScoreElement);
+
         if (aiScoreElement) {
             aiScoreElement.textContent = `${aiScore}%`;
-console.log('✅ Updated AI score to:', aiScore);
-} else {
-    console.log('❌ AI Score Element not found for video:', videoData.id);
-}
-
-} catch (error) {
+            aiScoreElement.dataset.analyzed = 'true';
+            console.log('✅ Updated AI score to:', aiScore);
+        } else {
+            console.log('❌ AI Score Element not found for video:', videoData.id);
+        }
+    } catch (error) {
         console.error('Error analyzing video:', error);
+        showError(
+            document.querySelector(`#${platform}-platform`),
+            `Ошибка анализа: ${error.message}`
+        );
     }
+};
 
-    };
 // Mass Analysis
+// Массовый анализ видео через OpenRouter
 const massAnalyzeVideos = async (platform) => {
     try {
         const openrouterKey = elements.openrouterKey?.value;
-        
+
         if (!openrouterKey) {
-            showError(document.querySelector(`#${platform}-platform`), 'Необходим ключ OpenRouter для массового анализа');
+            showError(
+                document.querySelector(`#${platform}-platform`),
+                'Необходим ключ OpenRouter для массового анализа'
+            );
             return;
         }
-        
+
         const videos = state.videos[platform];
         if (!videos || videos.length === 0) {
-            showError(document.querySelector(`#${platform}-platform`), 'Нет видео для анализа');
+            showError(
+                document.querySelector(`#${platform}-platform`),
+                'Нет видео для анализа'
+            );
             return;
         }
-        
+
         const massAnalyzeBtn = elements[`${platform}MassAnalyzeBtn`];
-        const progressContainer = document.querySelector(`#${platform}-mass-analysis .mass-progress`);
-        const progressFill = document.querySelector(`#${platform}-mass-analysis .progress-fill`);
-        const progressText = document.querySelector(`#${platform}-mass-analysis .progress-text`);
-        
+        const progressContainer = document.querySelector(
+            `#${platform}-mass-analysis .mass-progress`
+        );
+        const progressFill = document.querySelector(
+            `#${platform}-mass-analysis .progress-fill`
+        );
+        const progressText = document.querySelector(
+            `#${platform}-mass-analysis .progress-text`
+        );
+
         if (!massAnalyzeBtn || !progressContainer || !progressFill || !progressText) return;
-        
-        // Show progress
+
+        // показать прогресс
         progressContainer.classList.remove('hidden');
         massAnalyzeBtn.disabled = true;
         massAnalyzeBtn.textContent = 'Анализ в процессе...';
-        
+
         for (let i = 0; i < videos.length; i++) {
             const video = videos[i];
             const videoId = video.id;
-            const aiScoreElement = document.querySelector(`.video-card[data-video-id="${videoId}"] .ai-score`);
-            const analysisContainer = document.getElementById(`analysis-${videoId}`);
-            
-            // Update progress
-            progressFill.style.width = `${((i) / videos.length) * 100}%`;
+
+            const aiScoreElement = document.querySelector(
+                `.video-card[data-video-id="${videoId}"] .ai-score`
+            );
+
+            // обновляем прогресс
+            progressFill.style.width = `${(i / videos.length) * 100}%`;
             progressText.textContent = `Анализ ${i} из ${videos.length} видео...`;
-            
-            // Skip if already analyzed
+
+            // уже анализировали — пропускаем
             if (aiScoreElement && aiScoreElement.dataset.analyzed === 'true') {
                 continue;
             }
-            
-            // Analyze (simplified for demo)
-            await new Promise(resolve => setTimeout(resolve, 300));
-            
-            if (aiScoreElement && analysisContainer) {
-                // Generate a pseudo-random but consistent score based on the video ID
-                const hash = videoId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-                const aiScore = Math.floor(55 + (hash % 40)); // Range 55-94
-                
-                // Generate mock insights
-                const insights = [
-                    'Соответствует актуальным трендам молодежи',
-                    'Высокая динамичность визуального ряда',
-                    'Присутствие популярных мемов и отсылок'
-                ];
-                
-                // Update UI with analysis
-                aiScoreElement.textContent = `${aiScore}%`;
-                aiScoreElement.dataset.analyzed = 'true';
-                
-                analysisContainer.innerHTML = `
-                    <h5>AI Анализ:</h5>
-                    <ul>
-                        ${insights.map(insight => `<li>${insight}</li>`).join('')}
-                    </ul>
-                `;
-                analysisContainer.classList.remove('hidden');
+
+            // реальный запрос в OpenRouter
+            await analyzeVideo(video, platform);
+
+            // помечаем видео как проанализированное
+            const updatedScoreEl = document.querySelector(
+                `.video-card[data-video-id="${videoId}"] .ai-score`
+            );
+            if (updatedScoreEl) {
+                updatedScoreEl.dataset.analyzed = 'true';
             }
+
+            // немного притормаживаем, чтобы не душить API
+            await new Promise(resolve => setTimeout(resolve, 300));
         }
-        
-        // Finalize progress
+
+        // финализируем прогресс
         progressFill.style.width = '100%';
         progressText.textContent = `Анализ ${videos.length} из ${videos.length} видео завершен`;
-        
-        // Reset button after 2 seconds
+
+        // вернуть кнопку в исходное состояние
         setTimeout(() => {
             massAnalyzeBtn.disabled = false;
             massAnalyzeBtn.textContent = '🧠 Массовый AI анализ';
         }, 2000);
-        
+
     } catch (error) {
         console.error('Error in mass analysis:', error);
-        showError(document.querySelector(`#${platform}-platform`), `Ошибка при массовом анализе: ${error.message}`);
-        
-        // Reset button
+        showError(
+            document.querySelector(`#${platform}-platform`),
+            `Ошибка при массовом анализе: ${error.message}`
+        );
+
         const massAnalyzeBtn = elements[`${platform}MassAnalyzeBtn`];
         if (massAnalyzeBtn) {
             massAnalyzeBtn.disabled = false;
